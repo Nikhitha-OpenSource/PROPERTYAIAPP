@@ -8,8 +8,8 @@ on:
   workflow_dispatch: {}
 
 env:
-  ACR_SERVER: propiqacr.azurecr.io
-  APP_IMAGE: propiqacr.azurecr.io/propiq-app
+  ACR_SERVER: YOUR_ACTUAL_REGISTRY_NAME.azurecr.io
+  APP_IMAGE: YOUR_ACTUAL_REGISTRY_NAME.azurecr.io/propiq-app
   RESOURCE_GROUP: propiq-rg
   CONTAINER_APP_ENV: propiq-env
 
@@ -81,7 +81,7 @@ jobs:
       - name: Deploy unified app container
         uses: azure/container-apps-deploy-action@v1
         with:
-          acrName: propiqacr
+          acrName: YOUR_ACTUAL_REGISTRY_NAME
           containerAppName: propiq-app
           resourceGroup: ${{ env.RESOURCE_GROUP }}
           imageToDeploy: ${{ env.APP_IMAGE }}:${{ github.sha }}
