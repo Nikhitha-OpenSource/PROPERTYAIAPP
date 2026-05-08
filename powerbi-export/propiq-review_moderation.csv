@@ -1,0 +1,3 @@
+﻿"type","review_id","property_id","reviewer_name","rating","comment","status","created_at"
+"review","rev-001","prop-014","Ananya Rao","2","Delayed response and unclear payment terms.","FLAGGED","2026-05-01T10:30:00"
+"chat_flag","","prop-021","","","Cash only payment request detected in chat.","PENDING","2026-05-06T18:20:00"

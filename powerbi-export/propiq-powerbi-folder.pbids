@@ -1,0 +1,14 @@
+{
+  "version": "0.1",
+  "connections": [
+    {
+      "details": {
+        "protocol": "folder",
+        "address": {
+          "path": "D:\\CAPSTONE\\powerbi-export"
+        }
+      },
+      "mode": "Import"
+    }
+  ]
+}

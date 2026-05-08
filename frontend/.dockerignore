@@ -1,0 +1,31 @@
+# Node and build outputs
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# Python & Virtual Environment
+__pycache__/
+*.py[cod]
+*$py.class
+backend/env/
+backend/venv/
+backend/.venv/
+
+# Environment variables (secrets)
+.env
+backend/.env
+frontend/.env*
+
+# Git
+.git/
+.gitignore
+
+# Testing and Storage
+.pytest_cache/
+pytest-cache-files-*
+.coverage
+backend/*.db
+backend/storage/
+tmp/
+.tmp/
+temp/

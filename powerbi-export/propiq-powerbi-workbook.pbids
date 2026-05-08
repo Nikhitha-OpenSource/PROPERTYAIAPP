@@ -1,0 +1,14 @@
+{
+  "version": "0.1",
+  "connections": [
+    {
+      "details": {
+        "protocol": "file",
+        "address": {
+          "path": "D:\\CAPSTONE\\powerbi-export\\propiq-powerbi-workbook.xlsx"
+        }
+      },
+      "mode": "Import"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+# Python & Virtual Environment
+__pycache__/
+*.py[cod]
+*$py.class
+env/
+venv/
+.venv/
+
+# Environment variables (secrets)
+.env
+
+# Git
+.git/
+.gitignore
+
+# Testing and Coverage
+.pytest_cache/
+pytest-cache-files-*
+.coverage
+htmlcov/
+
+# Local Databases and Storage
+*.db
+*.sqlite3
+storage/
+
+# Temp files
+tmp/
+.tmp/
+temp/

@@ -1,0 +1,258 @@
+﻿{
+    "dataset_name":  "PROPIQ Admin Seller Operations",
+    "generated_at":  "2026-05-08T00:30:55",
+    "demo_data":  true,
+    "tables":  {
+                   "summary":  [
+                                   {
+                                       "total_sellers":  8,
+                                       "total_listings":  156,
+                                       "verified_listings":  132,
+                                       "pending_listings":  24,
+                                       "total_leads":  315,
+                                       "open_leads":  201,
+                                       "sold_count":  74,
+                                       "sold_value":  686000000,
+                                       "conversion_rate":  0.235,
+                                       "avg_rating":  4.4,
+                                       "review_count":  189,
+                                       "flagged_items":  5,
+                                       "generated_at":  "2026-05-08T00:30:55",
+                                       "demo_data":  true
+                                   }
+                               ],
+                   "seller_performance":  [
+                                              {
+                                                  "seller_id":  "demo-seller-001",
+                                                  "seller_name":  "Aarohi Realty",
+                                                  "email":  "seller1@example.com",
+                                                  "listings":  36,
+                                                  "verified_listings":  31,
+                                                  "pending_listings":  5,
+                                                  "leads":  82,
+                                                  "sold_count":  18,
+                                                  "sold_value":  172000000,
+                                                  "conversion_rate":  0.219,
+                                                  "avg_rating":  4.7,
+                                                  "review_count":  43,
+                                                  "flagged_reviews":  0
+                                              },
+                                              {
+                                                  "seller_id":  "demo-seller-002",
+                                                  "seller_name":  "Hyderabad Habitat",
+                                                  "email":  "seller2@example.com",
+                                                  "listings":  29,
+                                                  "verified_listings":  25,
+                                                  "pending_listings":  4,
+                                                  "leads":  68,
+                                                  "sold_count":  16,
+                                                  "sold_value":  148000000,
+                                                  "conversion_rate":  0.235,
+                                                  "avg_rating":  4.3,
+                                                  "review_count":  38,
+                                                  "flagged_reviews":  1
+                                              },
+                                              {
+                                                  "seller_id":  "demo-seller-003",
+                                                  "seller_name":  "Skyline Estates",
+                                                  "email":  "seller3@example.com",
+                                                  "listings":  24,
+                                                  "verified_listings":  21,
+                                                  "pending_listings":  3,
+                                                  "leads":  54,
+                                                  "sold_count":  13,
+                                                  "sold_value":  126000000,
+                                                  "conversion_rate":  0.241,
+                                                  "avg_rating":  4.5,
+                                                  "review_count":  31,
+                                                  "flagged_reviews":  0
+                                              },
+                                              {
+                                                  "seller_id":  "demo-seller-004",
+                                                  "seller_name":  "Prime Keys Realty",
+                                                  "email":  "seller4@example.com",
+                                                  "listings":  21,
+                                                  "verified_listings":  18,
+                                                  "pending_listings":  3,
+                                                  "leads":  47,
+                                                  "sold_count":  11,
+                                                  "sold_value":  96000000,
+                                                  "conversion_rate":  0.234,
+                                                  "avg_rating":  4.1,
+                                                  "review_count":  27,
+                                                  "flagged_reviews":  2
+                                              },
+                                              {
+                                                  "seller_id":  "demo-seller-005",
+                                                  "seller_name":  "Nexus Properties",
+                                                  "email":  "seller5@example.com",
+                                                  "listings":  18,
+                                                  "verified_listings":  15,
+                                                  "pending_listings":  3,
+                                                  "leads":  39,
+                                                  "sold_count":  9,
+                                                  "sold_value":  82000000,
+                                                  "conversion_rate":  0.231,
+                                                  "avg_rating":  4.2,
+                                                  "review_count":  22,
+                                                  "flagged_reviews":  1
+                                              }
+                                          ],
+                   "sales_trend":  [
+                                       {
+                                           "month":  "2025-12",
+                                           "sold_count":  7,
+                                           "sold_value":  62000000,
+                                           "new_listings":  32
+                                       },
+                                       {
+                                           "month":  "2026-01",
+                                           "sold_count":  9,
+                                           "sold_value":  84000000,
+                                           "new_listings":  38
+                                       },
+                                       {
+                                           "month":  "2026-02",
+                                           "sold_count":  11,
+                                           "sold_value":  106000000,
+                                           "new_listings":  42
+                                       },
+                                       {
+                                           "month":  "2026-03",
+                                           "sold_count":  13,
+                                           "sold_value":  121000000,
+                                           "new_listings":  45
+                                       },
+                                       {
+                                           "month":  "2026-04",
+                                           "sold_count":  16,
+                                           "sold_value":  147000000,
+                                           "new_listings":  49
+                                       },
+                                       {
+                                           "month":  "2026-05",
+                                           "sold_count":  18,
+                                           "sold_value":  166000000,
+                                           "new_listings":  52
+                                       }
+                                   ],
+                   "lead_pipeline":  [
+                                         {
+                                             "stage":  "NEW",
+                                             "count":  92
+                                         },
+                                         {
+                                             "stage":  "CONTACTED",
+                                             "count":  61
+                                         },
+                                         {
+                                             "stage":  "VISIT",
+                                             "count":  31
+                                         },
+                                         {
+                                             "stage":  "NEGOTIATION",
+                                             "count":  17
+                                         },
+                                         {
+                                             "stage":  "CLOSED",
+                                             "count":  74
+                                         }
+                                     ],
+                   "top_localities":  [
+                                          {
+                                              "locality":  "Kondapur",
+                                              "listings":  42,
+                                              "sold_count":  18,
+                                              "sold_value":  162000000,
+                                              "avg_price":  9000000
+                                          },
+                                          {
+                                              "locality":  "Gachibowli",
+                                              "listings":  35,
+                                              "sold_count":  14,
+                                              "sold_value":  154000000,
+                                              "avg_price":  11000000
+                                          },
+                                          {
+                                              "locality":  "Madhapur",
+                                              "listings":  31,
+                                              "sold_count":  11,
+                                              "sold_value":  118000000,
+                                              "avg_price":  10700000
+                                          },
+                                          {
+                                              "locality":  "Miyapur",
+                                              "listings":  29,
+                                              "sold_count":  8,
+                                              "sold_value":  64000000,
+                                              "avg_price":  8000000
+                                          },
+                                          {
+                                              "locality":  "Kukatpally",
+                                              "listings":  19,
+                                              "sold_count":  7,
+                                              "sold_value":  52000000,
+                                              "avg_price":  7428571
+                                          }
+                                      ],
+                   "review_moderation":  [
+                                             {
+                                                 "type":  "review",
+                                                 "review_id":  "rev-001",
+                                                 "property_id":  "prop-014",
+                                                 "reviewer_name":  "Ananya Rao",
+                                                 "rating":  2,
+                                                 "comment":  "Delayed response and unclear payment terms.",
+                                                 "status":  "FLAGGED",
+                                                 "created_at":  "2026-05-01T10:30:00"
+                                             },
+                                             {
+                                                 "type":  "chat_flag",
+                                                 "review_id":  "",
+                                                 "property_id":  "prop-021",
+                                                 "reviewer_name":  "",
+                                                 "rating":  "",
+                                                 "comment":  "Cash only payment request detected in chat.",
+                                                 "status":  "PENDING",
+                                                 "created_at":  "2026-05-06T18:20:00"
+                                             }
+                                         ],
+                   "projection":  [
+                                      {
+                                          "method":  "Demo: open leads multiplied by current closed-lead conversion rate. No AI model used.",
+                                          "potential_sales_30d":  47,
+                                          "potential_value_30d":  436000000
+                                      }
+                                  ]
+               },
+    "table_counts":  [
+                         {
+                             "table":  "summary",
+                             "rows":  1
+                         },
+                         {
+                             "table":  "seller_performance",
+                             "rows":  5
+                         },
+                         {
+                             "table":  "sales_trend",
+                             "rows":  6
+                         },
+                         {
+                             "table":  "lead_pipeline",
+                             "rows":  5
+                         },
+                         {
+                             "table":  "top_localities",
+                             "rows":  5
+                         },
+                         {
+                             "table":  "review_moderation",
+                             "rows":  2
+                         },
+                         {
+                             "table":  "projection",
+                             "rows":  1
+                         }
+                     ]
+}

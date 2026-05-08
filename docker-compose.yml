@@ -1,0 +1,63 @@
+services:
+  app:
+    build: .
+    container_name: propiq-app
+    ports:
+      - "80:80"
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////app/propiq.db}
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=propiqdb
+      - REDIS_URL=redis://redis:6379
+      - AZURE_OPENAI_KEY=${AZURE_OPENAI_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2024-02-01}
+      - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT}
+      - AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-text-embedding-ada-002}
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING}
+      - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME:-propiqstorage}
+      - AZURE_BLOB_CONTAINER_IMAGES=${AZURE_BLOB_CONTAINER_IMAGES:-property-images}
+      - AZURE_BLOB_CONTAINER_DEEDS=${AZURE_BLOB_CONTAINER_DEEDS:-deed-documents}
+      - AZURE_DOCUMENT_INTELLIGENCE_KEY=${AZURE_DOCUMENT_INTELLIGENCE_KEY}
+      - AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=${AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT}
+      - AZURE_SEARCH_KEY=${AZURE_SEARCH_KEY}
+      - AZURE_SEARCH_ENDPOINT=${AZURE_SEARCH_ENDPOINT}
+      - AZURE_SEARCH_PROPERTIES_INDEX=${AZURE_SEARCH_PROPERTIES_INDEX:-properties-index}
+      - AZURE_SEARCH_LEGAL_DOCS_INDEX=${AZURE_SEARCH_LEGAL_DOCS_INDEX:-legal-docs-index}
+      - USE_LOCAL_LLM=${USE_LOCAL_LLM:-false}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_EXPIRE_MINUTES=${JWT_EXPIRE_MINUTES:-60}
+      - JWT_REFRESH_EXPIRE_DAYS=${JWT_REFRESH_EXPIRE_DAYS:-7}
+      - GOOGLE_PLACES_API_KEY=${GOOGLE_PLACES_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - ELEVENLABS_VOICE_ID=${ELEVENLABS_VOICE_ID:-JBFqnCBsd6RMkjVDRZzb}
+      - ELEVENLABS_MODEL_ID=${ELEVENLABS_MODEL_ID:-eleven_multilingual_v2}
+      - ELEVENLABS_OUTPUT_FORMAT=${ELEVENLABS_OUTPUT_FORMAT:-mp3_44100_128}
+      - AZURE_APPINSIGHTS_CONNECTION_STRING=${AZURE_APPINSIGHTS_CONNECTION_STRING}
+    depends_on:
+      - redis
+      - mongodb
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:6.0
+    container_name: propiq-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: propiq-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  mongodb_data:

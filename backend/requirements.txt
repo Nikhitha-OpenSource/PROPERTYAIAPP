@@ -1,0 +1,70 @@
+fastapi
+uvicorn[standard]
+gunicorn
+
+# SQL (Azure SQL / SQL Server)
+sqlalchemy
+alembic
+pyodbc
+
+# MongoDB (primary database)
+motor
+pymongo
+
+pydantic
+pydantic-settings
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+aiohttp
+httpx
+redis
+celery
+
+# Azure SDKs
+azure-cognitiveservices-search-websearch
+azure-ai-formrecognizer
+azure-search-documents
+azure-storage-blob
+azure-cosmos
+azure-identity
+azure-keyvault-secrets
+openai
+azure-ai-ml
+
+# ML / DL
+scikit-learn
+xgboost
+prophet
+torch
+onnx
+skl2onnx
+onnxruntime
+scipy
+numpy
+pandas
+
+# GenAI / Agents
+langchain
+langchain-openai
+langchain-community
+faiss-cpu
+crewai
+
+# Monitoring
+structlog
+opencensus-ext-azure
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+httpx
+
+# Utils
+python-dotenv
+Pillow
+fuzzywuzzy
+python-Levenshtein
+geopy
+openpyxl

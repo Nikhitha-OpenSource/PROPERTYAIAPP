@@ -1,0 +1,6 @@
+﻿"seller_id","seller_name","email","listings","verified_listings","pending_listings","leads","sold_count","sold_value","conversion_rate","avg_rating","review_count","flagged_reviews"
+"demo-seller-001","Aarohi Realty","seller1@example.com","36","31","5","82","18","172000000","0.219","4.7","43","0"
+"demo-seller-002","Hyderabad Habitat","seller2@example.com","29","25","4","68","16","148000000","0.235","4.3","38","1"
+"demo-seller-003","Skyline Estates","seller3@example.com","24","21","3","54","13","126000000","0.241","4.5","31","0"
+"demo-seller-004","Prime Keys Realty","seller4@example.com","21","18","3","47","11","96000000","0.234","4.1","27","2"
+"demo-seller-005","Nexus Properties","seller5@example.com","18","15","3","39","9","82000000","0.231","4.2","22","1"

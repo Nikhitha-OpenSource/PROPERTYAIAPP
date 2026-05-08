@@ -1,0 +1,28 @@
+# 1. Node Modules (Massive)
+frontend/node_modules/
+frontend/dist/
+
+# 2. Python Environments
+backend/venv/
+backend/env/
+backend/.venv/
+__pycache__/
+*.pyc
+
+# 3. Git and IDEs (Massive history)
+.git/
+.github/
+.vscode/
+.idea/
+
+# 4. Huge Data & Models (Prevents Docker from crashing)
+data/
+backend/ml/models/
+
+# 5. Databases & Temp files
+*.db
+*.sqlite3
+.pytest_cache/
+pytest-cache-files-*
+tmp/
+temp/
