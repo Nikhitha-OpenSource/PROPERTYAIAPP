@@ -8,8 +8,8 @@ on:
   workflow_dispatch: {}
 
 env:
-  ACR_SERVER: proai.azurecr.io
-  APP_IMAGE: proai.azurecr.io/propiq-app
+  ACR_SERVER: Proai.azurecr.io
+  APP_IMAGE: Proai.azurecr.io/propiq-app
   RESOURCE_GROUP: propiq-rg
   CONTAINER_APP_ENV: propiq-env
 
