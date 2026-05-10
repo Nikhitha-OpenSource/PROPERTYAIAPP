@@ -15,9 +15,8 @@ __pycache__/
 .vscode/
 .idea/
 
-# 4. Huge Data & Models (Prevents Docker from crashing)
+# 4. Huge Data (Prevents Docker from crashing)
 data/
-backend/ml/models/
 
 # 5. Databases & Temp files
 *.db

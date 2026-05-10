@@ -98,7 +98,7 @@ export default function AdminPage() {
   const loadDashboard = async () => {
     setLoading(true);
     const [propRes, sellerOpsRes, docStatsRes, verificationRes, powerBIRes] = await Promise.allSettled([
-      propertiesApi.list({ page_size: 50 }),
+      propertiesApi.list({ page_size: 500 }),
       analyticsApi.adminSellerOps(),
       deedApi.adminSummary(),
       deedApi.adminVerifications(),
@@ -649,11 +649,20 @@ export default function AdminPage() {
                   {prop.verified ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
                   {prop.verified ? 'Verified' : 'Pending Review'}
                 </div>
+                {!prop.verified && (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--gray)', marginTop: 4 }}>
+                    Check Deed Tools before approval
+                  </div>
+                )}
               </td>
               <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                   {!prop.verified && (
-                    <button className="btn btn-primary btn-sm" style={{ background: 'var(--accent2)', border: 'none' }} onClick={() => handleApprove(getPropertyId(prop))}>
+                    <button className="btn btn-primary btn-sm" style={{ background: 'var(--accent2)', border: 'none' }} onClick={() => {
+                      if (window.confirm('Please confirm the deed check is completed and approved in the Buyer Verification Docs tab. Proceed with listing approval?')) {
+                        handleApprove(getPropertyId(prop));
+                      }
+                    }}>
                       <CheckCircle size={14} /> Approve
                     </button>
                   )}

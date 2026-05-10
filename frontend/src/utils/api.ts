@@ -108,7 +108,25 @@ export const propertiesApi = {
   },
 };
 
-// ── ML / Predict APIs ──────────────────────────────────────────────────────
+// Buyer/Seller Chat APIs
+export const chatApi = {
+  startPropertyChat: (propertyId: string) => {
+    if (USE_MOCK) return mock({ channel_id: `property-${propertyId}`, property_id: propertyId, status: 'active' });
+    return api.post(`/chat/property/${propertyId}/start`);
+  },
+
+  history: (channelId: string, limit = 100) => {
+    if (USE_MOCK) return mock({ channel_id: channelId, messages: [] });
+    return api.get(`/chat/${channelId}/history`, { params: { limit } });
+  },
+
+  sellerActive: () => {
+    if (USE_MOCK) return mock({ items: [], total: 0 });
+    return api.get('/chat/seller/active');
+  },
+};
+
+// ML / Predict APIs
 export const predictApi = {
   landPrice: (data: unknown) => {
     if (USE_MOCK) return mock(MOCK_PRICE_PREDICTION(data as Parameters<typeof MOCK_PRICE_PREDICTION>[0]));

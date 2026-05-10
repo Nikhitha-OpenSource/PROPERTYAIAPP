@@ -123,7 +123,7 @@ class Settings(BaseSettings):
                 return True
             if normalized in {"0", "false", "no", "off", ""}:
                 return False
-            if normalized in {"warn", "warning", "info", "error"}:
+            if normalized in {"warn", "warning", "info", "error", "release"}:
                 return False
         return value
 

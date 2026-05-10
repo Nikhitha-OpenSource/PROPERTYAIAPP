@@ -4,7 +4,7 @@ import { SlidersHorizontal, X, Grid, List, Plus } from 'lucide-react';
 import { propertiesApi } from '../utils/api';
 import PropertyCard from '../components/Property/PropertyCard';
 
-const LOCALITIES = ['Kondapur','Gachibowli','Madhapur','HITEC City','Miyapur','KPHB','Banjara Hills','Jubilee Hills','Manikonda','Kukatpally','Uppal','Secunderabad'];
+const LOCALITIES = ['Kondapur','Gachibowli','Madhapur','HITEC City','Miyapur','KPHB','Banjara Hills','Jubilee Hills','Manikonda','Kukatpally','Uppal','Secunderabad','Tellapur','Shadnagar','Financial District','Kompally'];
 
 export default function PropertiesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -12,7 +12,6 @@ export default function PropertiesPage() {
   const [properties, setProperties] = useState<unknown[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(true);
   const [view, setView] = useState<'grid'|'list'>('grid');
 
@@ -30,7 +29,7 @@ export default function PropertiesPage() {
   const fetchProperties = async () => {
     setLoading(true);
     try {
-      const params: Record<string, unknown> = { page, page_size: 12 };
+      const params: Record<string, unknown> = { page: 1, page_size: 5000 };
       if (filters.locality)    params.locality = filters.locality;
       if (filters.bhk)        params.bhk = filters.bhk;
       if (filters.listing_type) params.listing_type = filters.listing_type;
@@ -39,13 +38,19 @@ export default function PropertiesPage() {
       if (filters.furnishing) params.furnishing = filters.furnishing;
       if (filters.verified_only) params.verified_only = true;
       const { data } = await propertiesApi.list(params);
+      
       setProperties(data.items || []);
       setTotal(data.total || 0);
-    } catch { setProperties([]); }
+    } catch (error) { 
+      console.error("Failed to fetch live properties, falling back to mock data:", error);
+      
+      setProperties([]);
+      setTotal(0);
+    }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchProperties(); }, [filters, page]);
+  useEffect(() => { fetchProperties(); }, [filters]);
 
   // Listen for GUI commands from PropBot
   useEffect(() => {
@@ -58,8 +63,6 @@ export default function PropertiesPage() {
     window.addEventListener('propiq-gui-command', handler);
     return () => window.removeEventListener('propiq-gui-command', handler);
   }, []);
-
-  const totalPages = Math.ceil(total / 12);
 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
@@ -180,17 +183,6 @@ export default function PropertiesPage() {
         ) : (
           <div className={view === 'grid' ? 'grid-3' : ''} style={view === 'list' ? { display: 'flex', flexDirection: 'column', gap: 16 } : {}}>
             {properties.map((p: any) => <PropertyCard key={p.property_id || p._id || p.id} property={p} />)}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 32 }}>
-            <button className="btn btn-secondary btn-sm" disabled={page === 1} onClick={() => setPage(page - 1)}>← Prev</button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((p) => (
-              <button key={p} className={`btn btn-sm ${page === p ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setPage(p)}>{p}</button>
-            ))}
-            <button className="btn btn-secondary btn-sm" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next →</button>
           </div>
         )}
       </main>

@@ -20,7 +20,7 @@ const createPriceIcon = (price: number) => L.divIcon({
 
 interface GeoFeature {
   geometry: { coordinates: [number, number] };
-  properties: { property_id: string; title: string; price: number; bhk: number; area_sqft: number; locality: string; verified: boolean; type?: string };
+  properties: { property_id?: string; id?: string; title: string; price: number; bhk: number; area_sqft: number; locality: string; verified: boolean; type?: string; listing_type?: string };
 }
 
 function MapController({ center }: { center: [number, number] }) {
@@ -44,7 +44,9 @@ export default function MapPage() {
   }, []);
 
   const filtered = features.filter((f) => {
-    if (filters.listing_type && f.properties.type !== filters.listing_type) return false;
+    if (!f.geometry || !f.geometry.coordinates || f.geometry.coordinates.length < 2) return false;
+    const pType = f.properties.listing_type || f.properties.type;
+    if (filters.listing_type && pType !== filters.listing_type) return false;
     if (filters.bhk && String(f.properties.bhk) !== filters.bhk) return false;
     return true;
   });
@@ -98,9 +100,9 @@ export default function MapPage() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
           />
-          {filtered.slice(0, 200).map((f) => (
+          {filtered.slice(0, 200).map((f, i) => (
             <Marker
-              key={f.properties.property_id}
+              key={f.properties.property_id || f.properties.id || i}
               position={[f.geometry.coordinates[1], f.geometry.coordinates[0]]}
               icon={createPriceIcon(f.properties.price)}
             >
@@ -119,7 +121,7 @@ export default function MapPage() {
                     <span className="badge badge-green" style={{ marginBottom: 10, display: 'inline-flex' }}>✓ Verified</span>
                   )}
                   <br />
-                  <button className="btn btn-primary btn-sm" onClick={() => navigate(`/properties/${f.properties.property_id}`)}>
+                  <button className="btn btn-primary btn-sm" onClick={() => navigate(`/properties/${f.properties.property_id || f.properties.id}`)}>
                     View Details →
                   </button>
                 </div>

@@ -12,6 +12,8 @@ import hashlib
 import re
 from typing import Optional, List, Dict, Any
 
+from app.demo_sellers import seller_for_property_position
+
 # ---------------------------------------------------------------------------
 # Comprehensive Hyderabad locality → (lat, lng) lookup
 # ---------------------------------------------------------------------------
@@ -45,6 +47,7 @@ LOCALITY_COORDS: Dict[str, tuple] = {
     "Tolichowki":        (17.3976, 78.4213),
     "Yapral":            (17.4982, 78.5422),
     "Shamshabad":        (17.2490, 78.4282),
+    "Shadnagar":         (17.0701, 78.2045),
     "Kompally":          (17.5433, 78.4788),
     "Bachupally":        (17.5391, 78.3944),
     "Pragathi Nagar":    (17.5165, 78.3785),
@@ -194,6 +197,16 @@ def _pick_images(prop_id: str, listing_type: str = "RESIDENTIAL", count: int = 4
     selected = [(base + i) % len(pool) for i in range(count)]
     # Keep image set unique within a property
     return [pool[idx] for idx in dict.fromkeys(selected)]
+
+
+def _apply_demo_seller_ownership(properties: List[Dict[str, Any]]) -> None:
+    """Assign one deterministic seller account to each block of 100 demo properties."""
+    for position, prop in enumerate(properties, start=1):
+        seller = seller_for_property_position(position)
+        prop["owner_user_id"] = seller["user_id"]
+        prop["seller_id"] = seller["user_id"]
+        prop["seller_name"] = seller["name"]
+        prop["seller_email"] = seller["email"]
 
 
 def _normalize_locality(name: str) -> str:
@@ -421,6 +434,7 @@ def _load_data():
         print(f"[DataService] Data load failed: {exc} — using fallback data")
         _PROPERTIES = _build_fallback()
 
+    _apply_demo_seller_ownership(_PROPERTIES)
     _LOADED = True
 
 
@@ -483,6 +497,8 @@ def get_properties(
     bhk: Optional[int] = None,
     listing_type: Optional[str] = None,
     furnishing: Optional[str] = None,
+    owner_user_id: Optional[str] = None,
+    seller_id: Optional[str] = None,
     verified_only: bool = False,
     page: int = 1,
     page_size: int = 20,
@@ -506,6 +522,12 @@ def get_properties(
         items = [p for p in items if p["listing_type"].lower() == listing_type.lower()]
     if furnishing:
         items = [p for p in items if p["furnishing"].lower() == furnishing.lower()]
+    seller_filter = owner_user_id or seller_id
+    if seller_filter:
+        items = [
+            p for p in items
+            if str(p.get("owner_user_id") or p.get("seller_id") or "") == str(seller_filter)
+        ]
     if verified_only:
         items = [p for p in items if p["verified"]]
 

@@ -103,17 +103,28 @@ async def main():
 
     # Try inserting into DB
     try:
-        from app.database import AsyncSessionLocal
-        from app.models.property import Property
-        from sqlalchemy import text
+        from app.db.session import SessionLocal
+        from app.db.models import Property
 
-        async with AsyncSessionLocal() as session:
-            for p in properties:
-                prop = Property(**{k: v for k, v in p.items()
-                                   if k not in ("created_at",)})
-                session.add(prop)
-            await session.commit()
-        print("✅ Inserted 1000 properties into database")
+        db = SessionLocal()
+        
+        # Only include columns that actually exist in your SQLAlchemy model to prevent crashes
+        valid_keys = {"property_id", "owner_user_id", "title", "property_type", 
+                      "listing_type", "locality", "city", "state", "latitude", 
+                      "longitude", "price", "area_sqft", "bhk", "description", "verified"}
+
+        for p in properties:
+            p["property_type"] = "SALE"
+            p["listing_type"] = "RESIDENTIAL"
+            p["owner_user_id"] = p.get("seller_id", "mock-seller-id")
+            
+            db_kwargs = {k: v for k, v in p.items() if k in valid_keys}
+            prop = Property(**db_kwargs)
+            db.add(prop)
+            
+        db.commit()
+        db.close()
+        print("✅ Successfully inserted 1000 properties into your live database!")
     except Exception as e:
         print(f"⚠️  DB insert skipped (run after DB setup): {e}")
         print("    JSON file saved — you can import it manually.")

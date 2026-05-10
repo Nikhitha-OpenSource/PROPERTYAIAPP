@@ -29,6 +29,32 @@ class PropertyCreate(BaseModel):
     state: str = "Telangana"
 
 
+def _property_to_dict(p: Property) -> dict:
+    return {
+        "property_id": p.property_id,
+        "owner_user_id": p.owner_user_id,
+        "seller_id": p.owner_user_id,
+        "seller_name": p.owner.name if p.owner else None,
+        "seller_email": p.owner.email if p.owner else None,
+        "title": p.title,
+        "property_type": p.property_type,
+        "listing_type": p.listing_type,
+        "locality": p.locality,
+        "city": p.city,
+        "state": p.state,
+        "latitude": p.latitude,
+        "longitude": p.longitude,
+        "price": p.price,
+        "area_sqft": p.area_sqft,
+        "bhk": p.bhk,
+        "description": p.description,
+        "price_per_sqft": (p.price / p.area_sqft) if p.area_sqft else None,
+        "verified": p.verified,
+        "image_urls": [],
+        "created_at": p.created_at.isoformat(),
+    }
+
+
 @router.post("/")
 async def create_property(
     property_data: PropertyCreate,
@@ -58,6 +84,8 @@ async def create_property(
     db.refresh(prop)
     return {
         "property_id": prop.property_id,
+        "owner_user_id": prop.owner_user_id,
+        "seller_id": prop.owner_user_id,
         "title": prop.title,
         "property_type": prop.property_type,
         "listing_type": prop.listing_type,
@@ -90,87 +118,78 @@ async def list_properties_endpoint(
     max_area: Optional[float]   = Query(None),
     owner_user_id: Optional[str] = Query(None),
     page: int                   = Query(1, ge=1),
-    page_size: int              = Query(12, ge=1, le=100),
+    page_size: int              = Query(12, ge=1, le=5000),
     db: Session                 = Depends(get_db),
 ):
-    """List properties with filtering & pagination (DB-first, CSV fallback)."""
-    try:
-        q = db.query(Property)
-        if city:
-            q = q.filter(Property.city == city)
-        if locality:
-            q = q.filter(Property.locality == locality)
-        if bhk is not None:
-            q = q.filter(Property.bhk == bhk)
-        if property_type:
-            q = q.filter(Property.property_type == property_type.upper())
-        if listing_type:
-            q = q.filter(Property.listing_type == listing_type.upper())
-        if min_price is not None:
-            q = q.filter(Property.price >= min_price)
-        if max_price is not None:
-            q = q.filter(Property.price <= max_price)
-        if min_area is not None:
-            q = q.filter(Property.area_sqft >= min_area)
-        if max_area is not None:
-            q = q.filter(Property.area_sqft <= max_area)
-        if owner_user_id:
-            q = q.filter(Property.owner_user_id == owner_user_id)
-        if verified_only:
-            q = q.filter(Property.verified.is_(True))
+    """List properties with filtering & pagination (Merged DB & CSV)."""
+    # 1. Query live database
+    q = db.query(Property)
+    if city:
+        q = q.filter(Property.city == city)
+    if locality:
+        q = q.filter(Property.locality == locality)
+    if bhk is not None:
+        q = q.filter(Property.bhk == bhk)
+    if property_type:
+        q = q.filter(Property.property_type == property_type.upper())
+    if listing_type:
+        q = q.filter(Property.listing_type == listing_type.upper())
+    if min_price is not None:
+        q = q.filter(Property.price >= min_price)
+    if max_price is not None:
+        q = q.filter(Property.price <= max_price)
+    if min_area is not None:
+        q = q.filter(Property.area_sqft >= min_area)
+    if max_area is not None:
+        q = q.filter(Property.area_sqft <= max_area)
+    if owner_user_id:
+        q = q.filter(Property.owner_user_id == owner_user_id)
+    if verified_only:
+        q = q.filter(Property.verified.is_(True))
 
-        total = q.count()
-        if total == 0:
-            raise Exception("No properties in database, falling back to CSV data")
-            
-        items = (
-            q.order_by(Property.created_at.desc())
-            .offset((page - 1) * page_size)
-            .limit(page_size)
-            .all()
-        )
-        return {
-            "items": [
-                {
-                    "property_id": p.property_id,
-                    "title": p.title,
-                    "property_type": p.property_type,
-                    "listing_type": p.listing_type,
-                    "locality": p.locality,
-                    "city": p.city,
-                    "state": p.state,
-                    "latitude": p.latitude,
-                    "longitude": p.longitude,
-                    "price": p.price,
-                    "area_sqft": p.area_sqft,
-                    "bhk": p.bhk,
-                    "description": p.description,
-                    "price_per_sqft": (p.price / p.area_sqft) if p.area_sqft else None,
-                    "verified": p.verified,
-                    "created_at": p.created_at.isoformat(),
-                }
-                for p in items
-            ],
-            "total": total,
-            "page": page,
-            "page_size": page_size,
-        }
-    except Exception:
-        # CSV fallback keeps demo working even if DB not configured
-        return csv_list_properties(
-            city=city,
-            locality=locality,
-            bhk=bhk,
-            listing_type=property_type or listing_type,
-            min_price=min_price,
-            max_price=max_price,
-            furnishing=None,
-            verified_only=verified_only,
-            min_area=min_area,
-            max_area=max_area,
-            page=page,
-            page_size=page_size,
-        )
+    db_total = q.count()
+    db_items = (
+        q.order_by(Property.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    db_dicts = [_property_to_dict(p) for p in db_items]
+
+    # 2. Query fallback CSV data
+    csv_result = csv_list_properties(
+        city=city,
+        locality=locality,
+        bhk=bhk,
+        listing_type=property_type or listing_type,
+        min_price=min_price,
+        max_price=max_price,
+        furnishing=None,
+        verified_only=verified_only,
+        min_area=min_area,
+        max_area=max_area,
+        owner_user_id=owner_user_id,
+        page=page,
+        page_size=page_size,
+    )
+    csv_dicts = csv_result.get("items", [])
+    csv_total = csv_result.get("total", 0)
+
+    # 3. Merge seamlessly, ensuring no duplicate properties
+    seen_ids = set()
+    combined_items = []
+    for p in db_dicts + csv_dicts:
+        pid = p.get("property_id")
+        if pid not in seen_ids:
+            seen_ids.add(pid)
+            combined_items.append(p)
+
+    return {
+        "items": combined_items[:page_size],
+        "total": db_total + csv_total,
+        "page": page,
+        "page_size": page_size,
+    }
 
 
 @router.get("/map/geojson")
@@ -181,36 +200,19 @@ async def properties_geojson(city: Optional[str] = Query("Hyderabad")):
 
 @router.get("/{property_id}")
 async def get_property_endpoint(property_id: str, db: Session = Depends(get_db)):
-    """Get full property detail by ID (DB-first, CSV fallback)."""
-    try:
-        p = db.get(Property, property_id)
-        if not p:
-            raise KeyError()
-        return {
-            "property_id": p.property_id,
-            "title": p.title,
-            "property_type": p.property_type,
-            "listing_type": p.listing_type,
-            "locality": p.locality,
-            "city": p.city,
-            "state": p.state,
-            "latitude": p.latitude,
-            "longitude": p.longitude,
-            "price": p.price,
-            "area_sqft": p.area_sqft,
-            "bhk": p.bhk,
-            "description": p.description,
-            "price_per_sqft": (p.price / p.area_sqft) if p.area_sqft else None,
-            "verified": p.verified,
-            "created_at": p.created_at.isoformat(),
-        }
-    except Exception:
-        prop = csv_get_property(property_id)
-        if prop:
-            return prop
-        result = csv_list_properties(page=1, page_size=1)
-        items = result.get("items", [])
-        return items[0] if items else {"error": "No properties found"}
+    """Get full property detail by ID (DB merged with CSV)."""
+    p = db.get(Property, property_id)
+    if p:
+        return _property_to_dict(p)
+        
+    prop = csv_get_property(property_id)
+    if prop:
+        return prop
+        
+    # Safe fallback if a random/deleted ID is requested to prevent UI crashes
+    result = csv_list_properties(page=1, page_size=1)
+    items = result.get("items", [])
+    return items[0] if items else {"error": "No properties found"}
 
 
 @router.get("/{property_id}/nearby")

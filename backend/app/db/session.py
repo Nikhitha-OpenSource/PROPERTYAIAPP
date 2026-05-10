@@ -99,18 +99,23 @@ def _seed_demo_users() -> None:
 
     from app.utils.security import hash_password, verify_password
     from app.db.models import User
+    from app.demo_sellers import DEMO_SELLERS
 
     demo_email = "test@propiq.ai"
-    demo_users = [
-        ("Demo Buyer", "BUYER"),
-        ("Demo Seller", "SELLER"),
-        ("Demo Admin", "ADMIN"),
+    demo_users: list[tuple[str, str, str, str, str | None]] = [
+        ("Demo Buyer", demo_email, "BUYER", "test123", None),
+        ("Demo Seller", demo_email, "SELLER", "test123", None),
+        ("Demo Admin", demo_email, "ADMIN", "test123", None),
     ]
+    demo_users.extend(
+        (seller["name"], seller["email"], "SELLER", seller["password"], seller["user_id"])
+        for seller in DEMO_SELLERS
+    )
 
     with SessionLocal() as db:
         changed = False
-        for name, role in demo_users:
-            existing = db.query(User).filter(User.email == demo_email, User.role == role).first()
+        for name, email, role, password, user_id in demo_users:
+            existing = db.query(User).filter(User.email == email, User.role == role).first()
             if existing:
                 if existing.name != name:
                     existing.name = name
@@ -118,11 +123,19 @@ def _seed_demo_users() -> None:
                 if not existing.is_active:
                     existing.is_active = True
                     changed = True
-                if not verify_password("test123", existing.password_hash):
-                    existing.password_hash = hash_password("test123")
+                if not verify_password(password, existing.password_hash):
+                    existing.password_hash = hash_password(password)
                     changed = True
                 continue
-            db.add(User(name=name, email=demo_email, role=role, password_hash=hash_password("test123")))
+            user_kwargs = {
+                "name": name,
+                "email": email,
+                "role": role,
+                "password_hash": hash_password(password),
+            }
+            if user_id:
+                user_kwargs["user_id"] = user_id
+            db.add(User(**user_kwargs))
             changed = True
         if changed:
             db.commit()
