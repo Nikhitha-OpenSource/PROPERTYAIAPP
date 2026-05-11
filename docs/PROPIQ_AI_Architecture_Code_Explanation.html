@@ -1,0 +1,4945 @@
+<!doctype html><html><head><meta charset="utf-8"><title>PROPIQ AI Architecture And Code Explanation</title><style>
+@page { size: A4; margin: 15mm 12mm; }
+body { font-family: "Segoe UI", Arial, sans-serif; line-height: 1.44; color: #1f2d3a; max-width: 980px; margin: 0 auto; padding: 22px; }
+h1 { color: #1B4F72; font-size: 34px; border-bottom: 4px solid #2E86C1; padding-bottom: 12px; }
+h2 { color: #1B4F72; font-size: 24px; margin-top: 34px; border-bottom: 1px solid #D9E2EA; padding-bottom: 8px; page-break-after: avoid; }
+h3 { color: #173f5f; font-size: 18px; margin-top: 24px; page-break-after: avoid; }
+p, li { font-size: 13px; }
+code { font-family: Consolas, "Courier New", monospace; background: #EEF4F8; color: #15384F; padding: 1px 4px; border-radius: 3px; }
+pre { background: #0F2233; color: #F4FBFF; padding: 14px; border-radius: 8px; overflow-x: auto; font-size: 12px; white-space: pre-wrap; }
+pre code { background: transparent; color: inherit; padding: 0; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 12px; page-break-inside: auto; }
+th { background: #1B4F72; color: white; text-align: left; padding: 7px 8px; }
+td { border: 1px solid #D9E2EA; vertical-align: top; padding: 6px 8px; }
+tr:nth-child(even) td { background: #F6F9FC; }
+a { color: #2E86C1; text-decoration: none; }
+.toc ul { list-style: none; padding-left: 16px; }
+</style></head><body><h1 id="propiq-ai-architecture-and-code-explanation">PROPIQ AI Architecture And Code Explanation</h1>
+<p>Generated: 2026-05-11 07:10.</p>
+<p>Scope: source code, tests, config, workflows, scripts, and major data/model/BI assets. Generated/vendor/build/cache folders are excluded. Environment files are listed only by purpose; secret values are not included.</p>
+<h2 id="table-of-contents">Table Of Contents</h2>
+<div class="toc">
+<ul>
+<li><a href="#propiq-ai-architecture-and-code-explanation">PROPIQ AI Architecture And Code Explanation</a><ul>
+<li><a href="#table-of-contents">Table Of Contents</a></li>
+<li><a href="#1-architecture-overview">1. Architecture Overview</a><ul>
+<li><a href="#layer-summary">Layer Summary</a></li>
+<li><a href="#main-runtime-flows">Main Runtime Flows</a></li>
+</ul>
+</li>
+<li><a href="#2-route-maps">2. Route Maps</a><ul>
+<li><a href="#backend-api">Backend API</a></li>
+<li><a href="#frontend">Frontend</a></li>
+</ul>
+</li>
+<li><a href="#3-file-catalog">3. File Catalog</a><ul>
+<li><a href="#ai-agent-layer">AI Agent Layer</a></li>
+<li><a href="#api-schemas">API Schemas</a></li>
+<li><a href="#automated-tests">Automated Tests</a></li>
+<li><a href="#bi-exports">BI Exports</a></li>
+<li><a href="#backend-api-routers">Backend API Routers</a></li>
+<li><a href="#backend-app-core">Backend App Core</a></li>
+<li><a href="#backend-data-scripts">Backend Data Scripts</a></li>
+<li><a href="#backend-services">Backend Services</a></li>
+<li><a href="#backend-support">Backend Support</a></li>
+<li><a href="#backend-utilities">Backend Utilities</a></li>
+<li><a href="#cicd">CI/CD</a></li>
+<li><a href="#data-assets">Data Assets</a></li>
+<li><a href="#data-engineering">Data Engineering</a></li>
+<li><a href="#frontend-app-shell">Frontend App Shell</a></li>
+<li><a href="#frontend-components">Frontend Components</a></li>
+<li><a href="#frontend-pages">Frontend Pages</a></li>
+<li><a href="#frontend-state">Frontend State</a></li>
+<li><a href="#frontend-support">Frontend Support</a></li>
+<li><a href="#frontend-utilities">Frontend Utilities</a></li>
+<li><a href="#ml-training">ML Training</a></li>
+<li><a href="#mongopydantic-models">Mongo/Pydantic Models</a></li>
+<li><a href="#repository-config">Repository Config</a></li>
+<li><a href="#repository-root">Repository Root</a></li>
+<li><a href="#sql-persistence">SQL Persistence</a></li>
+<li><a href="#sample-legal-data-tools">Sample Legal Data Tools</a></li>
+</ul>
+</li>
+<li><a href="#4-file-by-file-and-function-reference">4. File-By-File And Function Reference</a><ul>
+<li><a href="#env">.env</a></li>
+<li><a href="#githubworkflowsdeployyml">.github/workflows/deploy.yml</a></li>
+<li><a href="#mcpjson">.mcp.json</a></li>
+<li><a href="#vscodesettingsjson">.vscode/settings.json</a></li>
+<li><a href="#data_sourcesmd">DATA_SOURCES.md</a></li>
+<li><a href="#dockerfile">Dockerfile</a></li>
+<li><a href="#project_documentationmd">PROJECT_DOCUMENTATION.md</a></li>
+<li><a href="#readmemd">README.md</a></li>
+<li><a href="#seller_accounts_and_propertiesmd">SELLER_ACCOUNTS_AND_PROPERTIES.md</a></li>
+<li><a href="#backendenv">backend/.env</a></li>
+<li><a href="#backendapp__init__py">backend/app/__init__.py</a></li>
+<li><a href="#backendappagents__init__py">backend/app/agents/__init__.py</a></li>
+<li><a href="#backendappagentspropiq_agentspy">backend/app/agents/propiq_agents.py</a></li>
+<li><a href="#backendappconfigpy">backend/app/config.py</a></li>
+<li><a href="#backendappdatabasepy">backend/app/database.py</a></li>
+<li><a href="#backendappdb__init__py">backend/app/db/__init__.py</a></li>
+<li><a href="#backendappdbbasepy">backend/app/db/base.py</a></li>
+<li><a href="#backendappdbmodelspy">backend/app/db/models.py</a></li>
+<li><a href="#backendappdbsessionpy">backend/app/db/session.py</a></li>
+<li><a href="#backendappdemo_sellerspy">backend/app/demo_sellers.py</a></li>
+<li><a href="#backendappmainpy">backend/app/main.py</a></li>
+<li><a href="#backendappmodels__init__py">backend/app/models/__init__.py</a></li>
+<li><a href="#backendappmodelsdeedpy">backend/app/models/deed.py</a></li>
+<li><a href="#backendappmodelspropertypy">backend/app/models/property.py</a></li>
+<li><a href="#backendappmodelsuserpy">backend/app/models/user.py</a></li>
+<li><a href="#backendapprouters__init__py">backend/app/routers/__init__.py</a></li>
+<li><a href="#backendapproutersagentspy">backend/app/routers/agents.py</a></li>
+<li><a href="#backendapproutersanalyticspy">backend/app/routers/analytics.py</a></li>
+<li><a href="#backendapproutersauthpy">backend/app/routers/auth.py</a></li>
+<li><a href="#backendapprouterschatpy">backend/app/routers/chat.py</a></li>
+<li><a href="#backendapproutersdeedspy">backend/app/routers/deeds.py</a></li>
+<li><a href="#backendapprouterspredictpy">backend/app/routers/predict.py</a></li>
+<li><a href="#backendapprouterspropertiespy">backend/app/routers/properties.py</a></li>
+<li><a href="#backendappschemas__init__py">backend/app/schemas/__init__.py</a></li>
+<li><a href="#backendappschemaspropertypy">backend/app/schemas/property.py</a></li>
+<li><a href="#backendappservices__init__py">backend/app/services/__init__.py</a></li>
+<li><a href="#backendappservicesagent_servicepy">backend/app/services/agent_service.py</a></li>
+<li><a href="#backendappservicesdata_servicepy">backend/app/services/data_service.py</a></li>
+<li><a href="#backendappservicesdeed_servicepy">backend/app/services/deed_service.py</a></li>
+<li><a href="#backendappservicesgeocoding_servicepy">backend/app/services/geocoding_service.py</a></li>
+<li><a href="#backendappservicesml_servicepy">backend/app/services/ml_service.py</a></li>
+<li><a href="#backendappservicesrag_servicepy">backend/app/services/rag_service.py</a></li>
+<li><a href="#backendapputils__init__py">backend/app/utils/__init__.py</a></li>
+<li><a href="#backendapputilsloggingpy">backend/app/utils/logging.py</a></li>
+<li><a href="#backendapputilssecuritypy">backend/app/utils/security.py</a></li>
+<li><a href="#backenddatasample_deedsreadmemd">backend/data/sample_deeds/README.md</a></li>
+<li><a href="#backenddatasample_deedsbulk_upload_deedsjson">backend/data/sample_deeds/bulk_upload_deeds.json</a></li>
+<li><a href="#backenddatasample_deedscreate_bulk_upload_filespy">backend/data/sample_deeds/create_bulk_upload_files.py</a></li>
+<li><a href="#backenddatasample_deedsupload_sample_deedspy">backend/data/sample_deeds/upload_sample_deeds.py</a></li>
+<li><a href="#backenddatasample_propertiesjson">backend/data/sample_properties.json</a></li>
+<li><a href="#backendml__init__py">backend/ml/__init__.py</a></li>
+<li><a href="#backendmltraining__init__py">backend/ml/training/__init__.py</a></li>
+<li><a href="#backendmltrainingtrain_allpy">backend/ml/training/train_all.py</a></li>
+<li><a href="#backendscripts__init__py">backend/scripts/__init__.py</a></li>
+<li><a href="#backendscriptsgenerate_synthetic_datapy">backend/scripts/generate_synthetic_data.py</a></li>
+<li><a href="#backendscriptsimport_all_datapy">backend/scripts/import_all_data.py</a></li>
+<li><a href="#backendscriptsimport_price_historypy">backend/scripts/import_price_history.py</a></li>
+<li><a href="#backendscriptsimport_properties_csvpy">backend/scripts/import_properties_csv.py</a></li>
+<li><a href="#backendscriptsscrape_imagespy">backend/scripts/scrape_images.py</a></li>
+<li><a href="#backendscriptsseed_mock_to_mongopy">backend/scripts/seed_mock_to_mongo.py</a></li>
+<li><a href="#backendtest_azure_sqlpy">backend/test_azure_sql.py</a></li>
+<li><a href="#backendtest_integrationpy">backend/test_integration.py</a></li>
+<li><a href="#backendtests__init__py">backend/tests/__init__.py</a></li>
+<li><a href="#backendtestsconftestpy">backend/tests/conftest.py</a></li>
+<li><a href="#backendteststest_apipy">backend/tests/test_api.py</a></li>
+<li><a href="#data-engineeringdatabricks-notebooks01_etl_pipelinepy">data-engineering/databricks-notebooks/01_etl_pipeline.py</a></li>
+<li><a href="#data-engineeringscrape_hyderabadpy">data-engineering/scrape_hyderabad.py</a></li>
+<li><a href="#data-engineeringutilshtml_helperspy">data-engineering/utils/html_helpers.py</a></li>
+<li><a href="#datareadmemd">data/README.md</a></li>
+<li><a href="#dataimagesimages_manifestjson">data/images/images_manifest.json</a></li>
+<li><a href="#docker-composeyml">docker-compose.yml</a></li>
+<li><a href="#docsgenerate_architecture_reportpy">docs/generate_architecture_report.py</a></li>
+<li><a href="#frontendenvlocal">frontend/.env.local</a></li>
+<li><a href="#frontendindexhtml">frontend/index.html</a></li>
+<li><a href="#frontendnginxconf">frontend/nginx.conf</a></li>
+<li><a href="#frontendpackage-lockjson">frontend/package-lock.json</a></li>
+<li><a href="#frontendpackagejson">frontend/package.json</a></li>
+<li><a href="#frontendsrcapptsx">frontend/src/App.tsx</a></li>
+<li><a href="#frontendsrccomponentsagentagentchattsx">frontend/src/components/Agent/AgentChat.tsx</a></li>
+<li><a href="#frontendsrccomponentspropertypropertycardtsx">frontend/src/components/Property/PropertyCard.tsx</a></li>
+<li><a href="#frontendsrccomponentsuinavbartsx">frontend/src/components/UI/Navbar.tsx</a></li>
+<li><a href="#frontendsrcindexcss">frontend/src/index.css</a></li>
+<li><a href="#frontendsrcmaintsx">frontend/src/main.tsx</a></li>
+<li><a href="#frontendsrcpagesaddpropertypagetsx">frontend/src/pages/AddPropertyPage.tsx</a></li>
+<li><a href="#frontendsrcpagesadminpagetsx">frontend/src/pages/AdminPage.tsx</a></li>
+<li><a href="#frontendsrcpagesanalyticspagetsx">frontend/src/pages/AnalyticsPage.tsx</a></li>
+<li><a href="#frontendsrcpageschatpagetsx">frontend/src/pages/ChatPage.tsx</a></li>
+<li><a href="#frontendsrcpagescomparepagetsx">frontend/src/pages/ComparePage.tsx</a></li>
+<li><a href="#frontendsrcpagesdeedpagetsx">frontend/src/pages/DeedPage.tsx</a></li>
+<li><a href="#frontendsrcpageslandingpagetsx">frontend/src/pages/LandingPage.tsx</a></li>
+<li><a href="#frontendsrcpagesloginpagetsx">frontend/src/pages/LoginPage.tsx</a></li>
+<li><a href="#frontendsrcpagesmappagetsx">frontend/src/pages/MapPage.tsx</a></li>
+<li><a href="#frontendsrcpagespredictpagetsx">frontend/src/pages/PredictPage.tsx</a></li>
+<li><a href="#frontendsrcpagespropertiespagetsx">frontend/src/pages/PropertiesPage.tsx</a></li>
+<li><a href="#frontendsrcpagespropertydetailpagetsx">frontend/src/pages/PropertyDetailPage.tsx</a></li>
+<li><a href="#frontendsrcpagessellerpagetsx">frontend/src/pages/SellerPage.tsx</a></li>
+<li><a href="#frontendsrcstoreusestorets">frontend/src/store/useStore.ts</a></li>
+<li><a href="#frontendsrcthemets">frontend/src/theme.ts</a></li>
+<li><a href="#frontendsrcutilsapits">frontend/src/utils/api.ts</a></li>
+<li><a href="#frontendsrcutilsmockdatats">frontend/src/utils/mockData.ts</a></li>
+<li><a href="#frontendsrcvite-envdts">frontend/src/vite-env.d.ts</a></li>
+<li><a href="#frontendtsconfigjson">frontend/tsconfig.json</a></li>
+<li><a href="#frontendtsconfignodejson">frontend/tsconfig.node.json</a></li>
+<li><a href="#frontendviteconfigts">frontend/vite.config.ts</a></li>
+<li><a href="#powerbi-exportpropiq-powerbi-datasetjson">powerbi-export/propiq-powerbi-dataset.json</a></li>
+<li><a href="#test_apipy">test_api.py</a></li>
+</ul>
+</li>
+<li><a href="#5-data-model-and-bi-assets">5. Data, Model, And BI Assets</a></li>
+<li><a href="#6-deployment-and-environment-notes">6. Deployment And Environment Notes</a></li>
+<li><a href="#7-testing-summary">7. Testing Summary</a></li>
+<li><a href="#8-fast-reading-order">8. Fast Reading Order</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="1-architecture-overview">1. Architecture Overview</h2>
+<p>PROPIQ AI is a Hyderabad/Telangana real-estate intelligence platform. The frontend is a React/Vite SPA. The backend is FastAPI with SQL persistence, Mongo helpers, CSV/JSON fallback data, ML services, deed verification, PropBot agent APIs, chat, analytics, and Power BI export support.</p>
+<pre><code class="language-text">Browser
+  -&gt; React/Vite SPA: routes, pages, Zustand state, Axios wrappers, Leaflet/Recharts
+  -&gt; FastAPI /api/v1
+       Auth -&gt; SQL User -&gt; JWT
+       Properties -&gt; SQL listings + CSV/JSON fallback + static /images
+       Predict -&gt; MLService -&gt; pickle models or heuristics
+       Deeds -&gt; DeedService -&gt; storage, OCR, fuzzy match, legal checklist
+       Agents -&gt; AgentService/LangChain -&gt; Azure OpenAI or fallback replies
+       Chat -&gt; WebSocket + SQL ChatMessage
+       Analytics -&gt; SQL seller ops + MLService + Power BI-shaped tables
+  -&gt; Storage/integrations: SQLite/Azure SQL, MongoDB, Redis, Azure OpenAI, Blob Storage, Document Intelligence, Google Places, ElevenLabs, Power BI
+</code></pre>
+<h3 id="layer-summary">Layer Summary</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend pages/components</td>
+<td>User workflows and UI for search, map, valuation, deeds, analytics, chat, seller, and admin screens.</td>
+</tr>
+<tr>
+<td>Frontend utilities/state</td>
+<td>Axios wrappers, mock mode, INR formatting, placeholder image selection, persisted auth, compare state.</td>
+</tr>
+<tr>
+<td>API routers</td>
+<td>HTTP/WebSocket contract between UI and backend.</td>
+</tr>
+<tr>
+<td>Services</td>
+<td>Business logic and cloud/local fallback boundaries.</td>
+</tr>
+<tr>
+<td>Persistence models</td>
+<td>SQLAlchemy tables plus Pydantic document/API schemas.</td>
+</tr>
+<tr>
+<td>ML/data engineering</td>
+<td>Synthetic training, CSV imports, image scraping, Databricks ETL.</td>
+</tr>
+<tr>
+<td>Deployment/BI</td>
+<td>Docker, Compose, GitHub Actions, Nginx, Power BI exports.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="main-runtime-flows">Main Runtime Flows</h3>
+<ol>
+<li>Property browsing: React calls <code>propertiesApi</code>; FastAPI merges SQL listings with fallback catalog data; UI renders cards, details, map pins, price history, and compare state.</li>
+<li>AI valuation: <code>PredictPage</code> and detail pages call <code>/predict</code>; <code>MLService</code> returns model-backed or heuristic results.</li>
+<li>Deed verification: <code>DeedPage</code> uploads files; <code>DeedService</code> stores them, runs OCR/local extraction, fuzzy-matches names, attaches legal checklist text, and exposes admin decisions.</li>
+<li>PropBot: <code>AgentChat</code> calls <code>/agents/chat</code>; <code>AgentService</code> parses intent and returns replies, navigation cards, and UI commands.</li>
+<li>Buyer/seller chat: <code>ChatPage</code> opens a tokenized WebSocket; backend persists and broadcasts messages.</li>
+<li>Admin/BI: <code>AdminPage</code> loads seller operations, deed summaries, verification rows, and Power BI-shaped tables.</li>
+</ol>
+<h2 id="2-route-maps">2. Route Maps</h2>
+<h3 id="backend-api">Backend API</h3>
+<table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/health</code></td>
+<td><code>backend/app/main.py</code></td>
+<td>Backend health/liveness.</td>
+</tr>
+<tr>
+<td><code>/api/v1/auth/*</code></td>
+<td><code>backend/app/routers/auth.py</code></td>
+<td>Register, login, refresh.</td>
+</tr>
+<tr>
+<td><code>/api/v1/properties/*</code></td>
+<td><code>backend/app/routers/properties.py</code></td>
+<td>Listings, map, detail, nearby, price history, moderation.</td>
+</tr>
+<tr>
+<td><code>/api/v1/predict/*</code></td>
+<td><code>backend/app/routers/predict.py</code></td>
+<td>ML valuation and insight APIs.</td>
+</tr>
+<tr>
+<td><code>/api/v1/deeds/*</code></td>
+<td><code>backend/app/routers/deeds.py</code></td>
+<td>Document verification, legal utilities, admin review.</td>
+</tr>
+<tr>
+<td><code>/api/v1/agents/*</code></td>
+<td><code>backend/app/routers/agents.py</code></td>
+<td>PropBot chat, voice, search, document Q&amp;A.</td>
+</tr>
+<tr>
+<td><code>/api/v1/chat/*</code></td>
+<td><code>backend/app/routers/chat.py</code></td>
+<td>Buyer/seller REST and WebSocket chat.</td>
+</tr>
+<tr>
+<td><code>/api/v1/analytics/*</code></td>
+<td><code>backend/app/routers/analytics.py</code></td>
+<td>Market/admin analytics and Power BI-shaped data.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontend">Frontend</h3>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Component</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/</code></td>
+<td><code>LandingPage</code></td>
+<td>Home/search/featured listings.</td>
+</tr>
+<tr>
+<td><code>/properties</code></td>
+<td><code>PropertiesPage</code></td>
+<td>Filterable listing browser.</td>
+</tr>
+<tr>
+<td><code>/properties/map</code></td>
+<td><code>MapPage</code></td>
+<td>Leaflet map over GeoJSON.</td>
+</tr>
+<tr>
+<td><code>/properties/:id</code></td>
+<td><code>PropertyDetailPage</code></td>
+<td>Details, valuation, nearby, EMI, chat CTA.</td>
+</tr>
+<tr>
+<td><code>/properties/:id/chat</code></td>
+<td><code>ChatPage</code></td>
+<td>Buyer/seller chat.</td>
+</tr>
+<tr>
+<td><code>/list-property</code></td>
+<td><code>AddPropertyPage</code></td>
+<td>Protected listing wizard.</td>
+</tr>
+<tr>
+<td><code>/predict/commercial</code></td>
+<td><code>PredictPage</code></td>
+<td>Price/commercial/appreciation tools.</td>
+</tr>
+<tr>
+<td><code>/deeds</code></td>
+<td><code>DeedPage</code></td>
+<td>Legal workflow tools.</td>
+</tr>
+<tr>
+<td><code>/analytics</code></td>
+<td><code>AnalyticsPage</code></td>
+<td>Market dashboard.</td>
+</tr>
+<tr>
+<td><code>/compare</code></td>
+<td><code>ComparePage</code></td>
+<td>Compare shortlisted properties.</td>
+</tr>
+<tr>
+<td><code>/login</code></td>
+<td><code>LoginPage</code></td>
+<td>Auth flow.</td>
+</tr>
+<tr>
+<td><code>/seller</code></td>
+<td><code>SellerPage</code></td>
+<td>Seller dashboard.</td>
+</tr>
+<tr>
+<td><code>/admin</code></td>
+<td><code>AdminPage</code></td>
+<td>Admin command center.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-file-catalog">3. File Catalog</h2>
+<p>This report covers 106 text/source/config files and 452 extracted classes, functions, methods, and YAML sections.</p>
+<h3 id="ai-agent-layer">AI Agent Layer</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/app/agents/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/app/agents/propiq_agents.py</code></td>
+<td style="text-align: right;">358</td>
+<td>LangChain tool-calling agent with tools for property search, valuation, legal Q&amp;A, commercial scoring, and appreciation forecasting.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="api-schemas">API Schemas</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/app/schemas/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/app/schemas/property.py</code></td>
+<td style="text-align: right;">100</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="automated-tests">Automated Tests</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/tests/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/tests/conftest.py</code></td>
+<td style="text-align: right;">12</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>backend/tests/test_api.py</code></td>
+<td style="text-align: right;">189</td>
+<td>Main async pytest suite covering backend health, auth, listings, ML, deeds, RERA, analytics, GeoJSON, and agent behavior.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="bi-exports">BI Exports</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>powerbi-export/propiq-powerbi-dataset.json</code></td>
+<td style="text-align: right;">259</td>
+<td>JSON configuration or structured data file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backend-api-routers">Backend API Routers</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/app/routers/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/app/routers/agents.py</code></td>
+<td style="text-align: right;">150</td>
+<td>PropBot API for chat, voice, session history, GUI commands, natural-language search, and legal document Q&amp;A.</td>
+</tr>
+<tr>
+<td><code>backend/app/routers/analytics.py</code></td>
+<td style="text-align: right;">478</td>
+<td>Market and admin analytics API, including Power BI-ready seller operations datasets.</td>
+</tr>
+<tr>
+<td><code>backend/app/routers/auth.py</code></td>
+<td style="text-align: right;">112</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>backend/app/routers/chat.py</code></td>
+<td style="text-align: right;">359</td>
+<td>Buyer/seller WebSocket chat API with JWT validation, persisted messages, active threads, history, and safety alerts.</td>
+</tr>
+<tr>
+<td><code>backend/app/routers/deeds.py</code></td>
+<td style="text-align: right;">325</td>
+<td>Deed/legal workflow API for uploads, OCR verification, admin review, local file serving, stamp duty, timeline, and RERA checks.</td>
+</tr>
+<tr>
+<td><code>backend/app/routers/predict.py</code></td>
+<td style="text-align: right;">111</td>
+<td>ML prediction API for price, appreciation, commercial score, anomaly detection, and locality insights.</td>
+</tr>
+<tr>
+<td><code>backend/app/routers/properties.py</code></td>
+<td style="text-align: right;">286</td>
+<td>Property API that merges SQL listings with CSV/JSON fallback listings and exposes detail, map, nearby, history, verify, and delete behavior.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backend-app-core">Backend App Core</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/app/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/app/config.py</code></td>
+<td style="text-align: right;">137</td>
+<td>Typed pydantic-settings configuration for app, DBs, Azure services, JWT, external APIs, and ML paths.</td>
+</tr>
+<tr>
+<td><code>backend/app/database.py</code></td>
+<td style="text-align: right;">90</td>
+<td>Async MongoDB/Motor singleton client, database handle, collection helpers, startup ping, and shutdown cleanup.</td>
+</tr>
+<tr>
+<td><code>backend/app/demo_sellers.py</code></td>
+<td style="text-align: right;">87</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>backend/app/main.py</code></td>
+<td style="text-align: right;">101</td>
+<td>FastAPI entry point: startup/shutdown lifespan, middleware, static image serving, router registration, and health endpoint.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backend-data-scripts">Backend Data Scripts</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/scripts/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/scripts/generate_synthetic_data.py</code></td>
+<td style="text-align: right;">135</td>
+<td>Generates realistic Hyderabad property data and optionally inserts it into SQL.</td>
+</tr>
+<tr>
+<td><code>backend/scripts/import_all_data.py</code></td>
+<td style="text-align: right;">69</td>
+<td>Master data import wizard for property and price-history datasets.</td>
+</tr>
+<tr>
+<td><code>backend/scripts/import_price_history.py</code></td>
+<td style="text-align: right;">106</td>
+<td>Imports NHB RESIDEX-style price-history Excel/CSV files into MongoDB.</td>
+</tr>
+<tr>
+<td><code>backend/scripts/import_properties_csv.py</code></td>
+<td style="text-align: right;">130</td>
+<td>Imports supported real-estate CSV schemas into MongoDB.</td>
+</tr>
+<tr>
+<td><code>backend/scripts/scrape_images.py</code></td>
+<td style="text-align: right;">200</td>
+<td>Scrapes property images, validates/resizes them, writes thumbnails, and exports image metadata.</td>
+</tr>
+<tr>
+<td><code>backend/scripts/seed_mock_to_mongo.py</code></td>
+<td style="text-align: right;">454</td>
+<td>Seeds MongoDB with curated sample properties aligned to frontend demo data.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backend-services">Backend Services</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/app/services/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/app/services/agent_service.py</code></td>
+<td style="text-align: right;">387</td>
+<td>Lightweight PropBot service for intent parsing, curated replies, GUI commands, OpenAI calls, sessions, search, and RAG delegation.</td>
+</tr>
+<tr>
+<td><code>backend/app/services/data_service.py</code></td>
+<td style="text-align: right;">633</td>
+<td>CSV/JSON-backed Hyderabad property catalog, normalization, deterministic coordinates/images/sellers, filtering, GeoJSON, and analytics.</td>
+</tr>
+<tr>
+<td><code>backend/app/services/deed_service.py</code></td>
+<td style="text-align: right;">357</td>
+<td>Deed file storage, OCR/local extraction, fuzzy name matching, legal checklist/RAG, and verification serialization.</td>
+</tr>
+<tr>
+<td><code>backend/app/services/geocoding_service.py</code></td>
+<td style="text-align: right;">66</td>
+<td>Nearby POI lookup with Google Places integration and local mock fallback.</td>
+</tr>
+<tr>
+<td><code>backend/app/services/ml_service.py</code></td>
+<td style="text-align: right;">172</td>
+<td>ML inference facade with optional pickle artifacts and heuristic fallbacks for local demos.</td>
+</tr>
+<tr>
+<td><code>backend/app/services/rag_service.py</code></td>
+<td style="text-align: right;">97</td>
+<td>Legal RAG service using FAISS/Azure OpenAI when configured and deterministic legal fallbacks otherwise.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backend-support">Backend Support</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/.env</code></td>
+<td style="text-align: right;">secret</td>
+<td>Local environment-variable file; values are intentionally redacted.</td>
+</tr>
+<tr>
+<td><code>backend/data/sample_properties.json</code></td>
+<td style="text-align: right;">35627</td>
+<td>JSON configuration or structured data file.</td>
+</tr>
+<tr>
+<td><code>backend/ml/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/test_azure_sql.py</code></td>
+<td style="text-align: right;">60</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>backend/test_integration.py</code></td>
+<td style="text-align: right;">51</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backend-utilities">Backend Utilities</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/app/utils/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/app/utils/logging.py</code></td>
+<td style="text-align: right;">34</td>
+<td>structlog setup with optional Azure Application Insights exporter.</td>
+</tr>
+<tr>
+<td><code>backend/app/utils/security.py</code></td>
+<td style="text-align: right;">96</td>
+<td>Password hashing, JWT generation/decoding, current-user dependency, mock-token fallback, and role guards.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cicd">CI/CD</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.github/workflows/deploy.yml</code></td>
+<td style="text-align: right;">71</td>
+<td>GitHub Actions workflow that tests the backend and builds/pushes the unified Docker image to Azure Container Registry.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-assets">Data Assets</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data/README.md</code></td>
+<td style="text-align: right;">58</td>
+<td>Repository documentation or ignore/configuration file.</td>
+</tr>
+<tr>
+<td><code>data/images/images_manifest.json</code></td>
+<td style="text-align: right;">602</td>
+<td>JSON configuration or structured data file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-engineering">Data Engineering</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data-engineering/databricks-notebooks/01_etl_pipeline.py</code></td>
+<td style="text-align: right;">101</td>
+<td>PySpark/Databricks ETL: raw property JSON to cleaned features and locality price index Delta tables.</td>
+</tr>
+<tr>
+<td><code>data-engineering/scrape_hyderabad.py</code></td>
+<td style="text-align: right;">262</td>
+<td>Hyderabad dataset generator and optional live image scraper from 99acres.</td>
+</tr>
+<tr>
+<td><code>data-engineering/utils/html_helpers.py</code></td>
+<td style="text-align: right;">44</td>
+<td>Robots.txt, polite fetch, BeautifulSoup, and text helper utilities for scraping.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontend-app-shell">Frontend App Shell</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frontend/src/App.tsx</code></td>
+<td style="text-align: right;">62</td>
+<td>React route shell with protected routes, navbar, page wiring, and global PropBot widget.</td>
+</tr>
+<tr>
+<td><code>frontend/src/index.css</code></td>
+<td style="text-align: right;">453</td>
+<td>Global design system: color tokens, layout helpers, cards, buttons, badges, forms, navbar, hero, maps, chat widget, tables, skeletons, and responsive rules.</td>
+</tr>
+<tr>
+<td><code>frontend/src/main.tsx</code></td>
+<td style="text-align: right;">11</td>
+<td>React entrypoint that mounts the App and imports global styles.</td>
+</tr>
+<tr>
+<td><code>frontend/src/theme.ts</code></td>
+<td style="text-align: right;">23</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>frontend/src/vite-env.d.ts</code></td>
+<td style="text-align: right;">2</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontend-components">Frontend Components</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frontend/src/components/Agent/AgentChat.tsx</code></td>
+<td style="text-align: right;">268</td>
+<td>Floating PropBot widget with quick prompts, session chat, voice playback, navigation cards, and GUI command dispatch.</td>
+</tr>
+<tr>
+<td><code>frontend/src/components/Property/PropertyCard.tsx</code></td>
+<td style="text-align: right;">105</td>
+<td>Reusable property listing card with image fallback, price/details badges, navigation, and compare action.</td>
+</tr>
+<tr>
+<td><code>frontend/src/components/UI/Navbar.tsx</code></td>
+<td style="text-align: right;">84</td>
+<td>Role-aware top navigation and auth actions.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontend-pages">Frontend Pages</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frontend/src/pages/AddPropertyPage.tsx</code></td>
+<td style="text-align: right;">390</td>
+<td>Seller/admin multi-step property listing wizard with deed approval gate and final listing submit.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/AdminPage.tsx</code></td>
+<td style="text-align: right;">845</td>
+<td>Admin command center for seller analytics, Power BI exports, listing moderation, and buyer deed verification decisions.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/AnalyticsPage.tsx</code></td>
+<td style="text-align: right;">180</td>
+<td>Market analytics dashboard with KPI cards, trends, locality scores, commercial zones, and heatmap chips.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/ChatPage.tsx</code></td>
+<td style="text-align: right;">223</td>
+<td>Property chat page using REST history and authenticated WebSocket messages.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/ComparePage.tsx</code></td>
+<td style="text-align: right;">122</td>
+<td>Side-by-side compare page for up to three stored property cards.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/DeedPage.tsx</code></td>
+<td style="text-align: right;">337</td>
+<td>Legal workflow page for upload, status/timeline, stamp-duty calculation, and RERA check.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/LandingPage.tsx</code></td>
+<td style="text-align: right;">229</td>
+<td>Home page with hero search, stats, feature cards, featured listings, top localities, and PropBot CTA.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/LoginPage.tsx</code></td>
+<td style="text-align: right;">95</td>
+<td>Login/register form with role selection, auth persistence, and role-based redirects.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/MapPage.tsx</code></td>
+<td style="text-align: right;">144</td>
+<td>Leaflet map page over backend GeoJSON with price pins and filters.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/PredictPage.tsx</code></td>
+<td style="text-align: right;">280</td>
+<td>Tabbed AI prediction page for price, commercial score, and appreciation forecast.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/PropertiesPage.tsx</code></td>
+<td style="text-align: right;">192</td>
+<td>Filterable property listing page with grid/list mode and PropBot filter listener.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/PropertyDetailPage.tsx</code></td>
+<td style="text-align: right;">263</td>
+<td>Property detail page with gallery, valuation, EMI estimate, nearby places, price chart, and seller chat.</td>
+</tr>
+<tr>
+<td><code>frontend/src/pages/SellerPage.tsx</code></td>
+<td style="text-align: right;">284</td>
+<td>Seller dashboard for owned listings, inquiries, mock views/leads, trends, and listing actions.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontend-state">Frontend State</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frontend/src/store/useStore.ts</code></td>
+<td style="text-align: right;">93</td>
+<td>Zustand stores for property list/compare state and persisted auth state.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontend-support">Frontend Support</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frontend/.env.local</code></td>
+<td style="text-align: right;">secret</td>
+<td>Local environment-variable file; values are intentionally redacted.</td>
+</tr>
+<tr>
+<td><code>frontend/index.html</code></td>
+<td style="text-align: right;">20</td>
+<td>HTML shell or static HTML file.</td>
+</tr>
+<tr>
+<td><code>frontend/nginx.conf</code></td>
+<td style="text-align: right;">30</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>frontend/package-lock.json</code></td>
+<td style="text-align: right;">3827</td>
+<td>Generated npm dependency lockfile.</td>
+</tr>
+<tr>
+<td><code>frontend/package.json</code></td>
+<td style="text-align: right;">35</td>
+<td>npm package manifest with frontend scripts and dependencies.</td>
+</tr>
+<tr>
+<td><code>frontend/tsconfig.json</code></td>
+<td style="text-align: right;">24</td>
+<td>TypeScript compiler configuration.</td>
+</tr>
+<tr>
+<td><code>frontend/tsconfig.node.json</code></td>
+<td style="text-align: right;">2</td>
+<td>TypeScript compiler configuration.</td>
+</tr>
+<tr>
+<td><code>frontend/vite.config.ts</code></td>
+<td style="text-align: right;">23</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontend-utilities">Frontend Utilities</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>frontend/src/utils/api.ts</code></td>
+<td style="text-align: right;">496</td>
+<td>Axios client plus real/mock API wrappers for properties, chat, prediction, agents, analytics, deeds, auth, formatting, and images.</td>
+</tr>
+<tr>
+<td><code>frontend/src/utils/mockData.ts</code></td>
+<td style="text-align: right;">252</td>
+<td>Mock data generators used when VITE_USE_MOCK is enabled.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ml-training">ML Training</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/ml/training/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/ml/training/train_all.py</code></td>
+<td style="text-align: right;">209</td>
+<td>Synthetic ML training pipeline for price prediction, commercial scoring, anomaly detection, and appreciation history artifacts.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mongopydantic-models">Mongo/Pydantic Models</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/app/models/__init__.py</code></td>
+<td style="text-align: right;">0</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/app/models/deed.py</code></td>
+<td style="text-align: right;">27</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>backend/app/models/property.py</code></td>
+<td style="text-align: right;">65</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>backend/app/models/user.py</code></td>
+<td style="text-align: right;">31</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="repository-config">Repository Config</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.env</code></td>
+<td style="text-align: right;">secret</td>
+<td>Local environment-variable file; values are intentionally redacted.</td>
+</tr>
+<tr>
+<td><code>.mcp.json</code></td>
+<td style="text-align: right;">9</td>
+<td>JSON configuration or structured data file.</td>
+</tr>
+<tr>
+<td><code>.vscode/settings.json</code></td>
+<td style="text-align: right;">11</td>
+<td>JSON configuration or structured data file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="repository-root">Repository Root</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DATA_SOURCES.md</code></td>
+<td style="text-align: right;">309</td>
+<td>Repository documentation or ignore/configuration file.</td>
+</tr>
+<tr>
+<td><code>Dockerfile</code></td>
+<td style="text-align: right;">50</td>
+<td>Multi-stage build: compiles the React frontend, installs the Python backend, serves static files with Nginx, and proxies API traffic to FastAPI.</td>
+</tr>
+<tr>
+<td><code>PROJECT_DOCUMENTATION.md</code></td>
+<td style="text-align: right;">136</td>
+<td>Repository documentation or ignore/configuration file.</td>
+</tr>
+<tr>
+<td><code>README.md</code></td>
+<td style="text-align: right;">90</td>
+<td>Repository documentation or ignore/configuration file.</td>
+</tr>
+<tr>
+<td><code>SELLER_ACCOUNTS_AND_PROPERTIES.md</code></td>
+<td style="text-align: right;">1030</td>
+<td>Repository documentation or ignore/configuration file.</td>
+</tr>
+<tr>
+<td><code>docker-compose.yml</code></td>
+<td style="text-align: right;">64</td>
+<td>Local app, MongoDB, and Redis orchestration with environment wiring for Azure, ML, auth, and external APIs.</td>
+</tr>
+<tr>
+<td><code>docs/generate_architecture_report.py</code></td>
+<td style="text-align: right;">637</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>test_api.py</code></td>
+<td style="text-align: right;">27</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sql-persistence">SQL Persistence</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/app/db/__init__.py</code></td>
+<td style="text-align: right;">4</td>
+<td>Package marker so Python can import this directory as a module.</td>
+</tr>
+<tr>
+<td><code>backend/app/db/base.py</code></td>
+<td style="text-align: right;">7</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>backend/app/db/models.py</code></td>
+<td style="text-align: right;">135</td>
+<td>SQLAlchemy ORM entities for users, properties, leads, chat messages, events, reviews, and deed verifications.</td>
+</tr>
+<tr>
+<td><code>backend/app/db/session.py</code></td>
+<td style="text-align: right;">177</td>
+<td>SQLAlchemy engine/session setup, Azure SQL URL normalization, SQLite fallback, table creation, and demo user seeding.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sample-legal-data-tools">Sample Legal Data Tools</h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">Lines</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/data/sample_deeds/README.md</code></td>
+<td style="text-align: right;">58</td>
+<td>Repository documentation or ignore/configuration file.</td>
+</tr>
+<tr>
+<td><code>backend/data/sample_deeds/bulk_upload_deeds.json</code></td>
+<td style="text-align: right;">129</td>
+<td>JSON configuration or structured data file.</td>
+</tr>
+<tr>
+<td><code>backend/data/sample_deeds/create_bulk_upload_files.py</code></td>
+<td style="text-align: right;">185</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+<tr>
+<td><code>backend/data/sample_deeds/upload_sample_deeds.py</code></td>
+<td style="text-align: right;">208</td>
+<td>Source/configuration file used by this layer.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="4-file-by-file-and-function-reference">4. File-By-File And Function Reference</h2>
+<p>Each entry includes file purpose and every extracted top-level function/class plus class methods where present.</p>
+<h3 id="env"><code>.env</code></h3>
+<ul>
+<li>Layer: Repository Config</li>
+<li>Lines: not read; secret values redacted</li>
+<li>Purpose: Local environment-variable file; values are intentionally redacted.</li>
+<li>Functions/classes: environment values only; intentionally not included.</li>
+</ul>
+<h3 id="githubworkflowsdeployyml"><code>.github/workflows/deploy.yml</code></h3>
+<ul>
+<li>Layer: CI/CD</li>
+<li>Lines: 71</li>
+<li>Purpose: GitHub Actions workflow that tests the backend and builds/pushes the unified Docker image to Azure Container Registry.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td><code>yaml section name</code></td>
+<td>Function/helper implementing name behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td><code>yaml section on</code></td>
+<td>Function/helper implementing on behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td><code>yaml section env</code></td>
+<td>Function/helper implementing env behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">16</td>
+<td><code>yaml section jobs</code></td>
+<td>Function/helper implementing jobs behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mcpjson"><code>.mcp.json</code></h3>
+<ul>
+<li>Layer: Repository Config</li>
+<li>Lines: 9</li>
+<li>Purpose: JSON configuration or structured data file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="vscodesettingsjson"><code>.vscode/settings.json</code></h3>
+<ul>
+<li>Layer: Repository Config</li>
+<li>Lines: 11</li>
+<li>Purpose: JSON configuration or structured data file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="data_sourcesmd"><code>DATA_SOURCES.md</code></h3>
+<ul>
+<li>Layer: Repository Root</li>
+<li>Lines: 309</li>
+<li>Purpose: Repository documentation or ignore/configuration file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="dockerfile"><code>Dockerfile</code></h3>
+<ul>
+<li>Layer: Repository Root</li>
+<li>Lines: 50</li>
+<li>Purpose: Multi-stage build: compiles the React frontend, installs the Python backend, serves static files with Nginx, and proxies API traffic to FastAPI.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="project_documentationmd"><code>PROJECT_DOCUMENTATION.md</code></h3>
+<ul>
+<li>Layer: Repository Root</li>
+<li>Lines: 136</li>
+<li>Purpose: Repository documentation or ignore/configuration file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="readmemd"><code>README.md</code></h3>
+<ul>
+<li>Layer: Repository Root</li>
+<li>Lines: 90</li>
+<li>Purpose: Repository documentation or ignore/configuration file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="seller_accounts_and_propertiesmd"><code>SELLER_ACCOUNTS_AND_PROPERTIES.md</code></h3>
+<ul>
+<li>Layer: Repository Root</li>
+<li>Lines: 1030</li>
+<li>Purpose: Repository documentation or ignore/configuration file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendenv"><code>backend/.env</code></h3>
+<ul>
+<li>Layer: Backend Support</li>
+<li>Lines: not read; secret values redacted</li>
+<li>Purpose: Local environment-variable file; values are intentionally redacted.</li>
+<li>Functions/classes: environment values only; intentionally not included.</li>
+</ul>
+<h3 id="backendapp__init__py"><code>backend/app/__init__.py</code></h3>
+<ul>
+<li>Layer: Backend App Core</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendappagents__init__py"><code>backend/app/agents/__init__.py</code></h3>
+<ul>
+<li>Layer: AI Agent Layer</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendappagentspropiq_agentspy"><code>backend/app/agents/propiq_agents.py</code></h3>
+<ul>
+<li>Layer: AI Agent Layer</li>
+<li>Lines: 358</li>
+<li>Purpose: LangChain tool-calling agent with tools for property search, valuation, legal Q&amp;A, commercial scoring, and appreciation forecasting.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">17</td>
+<td><code>function _get_llm</code></td>
+<td>Private helper for get llm inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">57</td>
+<td><code>function search_properties</code></td>
+<td>Search for properties using natural language.</td>
+</tr>
+<tr>
+<td style="text-align: right;">104</td>
+<td><code>function get_price_prediction</code></td>
+<td>Predict property price using the ML model.</td>
+</tr>
+<tr>
+<td style="text-align: right;">154</td>
+<td><code>function query_legal_docs</code></td>
+<td>Answer questions about land deeds, RERA, stamp duty, legal timelines using the RAG pipeline over legal documents.</td>
+</tr>
+<tr>
+<td style="text-align: right;">187</td>
+<td><code>function get_commercial_score</code></td>
+<td>Score the commercial viability of a land parcel using the ML model.</td>
+</tr>
+<tr>
+<td style="text-align: right;">238</td>
+<td><code>function get_appreciation_forecast</code></td>
+<td>Forecast property price appreciation over 1, 3, and 5 years.</td>
+</tr>
+<tr>
+<td style="text-align: right;">301</td>
+<td><code>function create_propiq_agent</code></td>
+<td>Builds the LangChain AgentExecutor with PROPIQ tools and prompt.</td>
+</tr>
+<tr>
+<td style="text-align: right;">318</td>
+<td><code>function agent_chat</code></td>
+<td>Chat with the PropBot agent, maintaining session history.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappconfigpy"><code>backend/app/config.py</code></h3>
+<ul>
+<li>Layer: Backend App Core</li>
+<li>Lines: 137</li>
+<li>Purpose: Typed pydantic-settings configuration for app, DBs, Azure services, JWT, external APIs, and ML paths.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">17</td>
+<td><code>class Settings</code></td>
+<td>Class grouping data and behavior for settings.</td>
+</tr>
+<tr>
+<td style="text-align: right;">107</td>
+<td><code>method Settings._parse_cors_origins</code></td>
+<td>Method on <code>Settings</code> that handles parse cors origins behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">119</td>
+<td><code>method Settings._parse_debug</code></td>
+<td>Method on <code>Settings</code> that handles parse debug behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">132</td>
+<td><code>function get_settings</code></td>
+<td>Retrieves or derives get settings for this module.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappdatabasepy"><code>backend/app/database.py</code></h3>
+<ul>
+<li>Layer: Backend App Core</li>
+<li>Lines: 90</li>
+<li>Purpose: Async MongoDB/Motor singleton client, database handle, collection helpers, startup ping, and shutdown cleanup.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">17</td>
+<td><code>function get_mongo_client</code></td>
+<td>Return the Motor async client (creates it if not yet initialised).</td>
+</tr>
+<tr>
+<td style="text-align: right;">31</td>
+<td><code>function get_database</code></td>
+<td>Return the default PROPIQ database handle.</td>
+</tr>
+<tr>
+<td style="text-align: right;">39</td>
+<td><code>async function connect_db</code></td>
+<td>Called at app startup — verify the connection is alive.</td>
+</tr>
+<tr>
+<td style="text-align: right;">50</td>
+<td><code>async function close_db</code></td>
+<td>Called at app shutdown — gracefully close the Motor client.</td>
+</tr>
+<tr>
+<td style="text-align: right;">61</td>
+<td><code>function get_collection</code></td>
+<td>Shortcut: db[collection_name].</td>
+</tr>
+<tr>
+<td style="text-align: right;">67</td>
+<td><code>function properties_collection</code></td>
+<td>Function/helper implementing properties collection behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">70</td>
+<td><code>function users_collection</code></td>
+<td>Function/helper implementing users collection behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">73</td>
+<td><code>function transactions_collection</code></td>
+<td>Function/helper implementing transactions collection behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">76</td>
+<td><code>function legal_docs_collection</code></td>
+<td>Function/helper implementing legal docs collection behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">79</td>
+<td><code>function analytics_collection</code></td>
+<td>Function/helper implementing analytics collection behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">82</td>
+<td><code>function chat_history_collection</code></td>
+<td>Function/helper implementing chat history collection behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">87</td>
+<td><code>async function get_db</code></td>
+<td>FastAPI dependency — inject the database into route handlers.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappdb__init__py"><code>backend/app/db/__init__.py</code></h3>
+<ul>
+<li>Layer: SQL Persistence</li>
+<li>Lines: 4</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendappdbbasepy"><code>backend/app/db/base.py</code></h3>
+<ul>
+<li>Layer: SQL Persistence</li>
+<li>Lines: 7</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">4</td>
+<td><code>class Base</code></td>
+<td>SQLAlchemy ORM model for the base entity/table.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappdbmodelspy"><code>backend/app/db/models.py</code></h3>
+<ul>
+<li>Layer: SQL Persistence</li>
+<li>Lines: 135</li>
+<li>Purpose: SQLAlchemy ORM entities for users, properties, leads, chat messages, events, reviews, and deed verifications.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">14</td>
+<td><code>function _uuid</code></td>
+<td>Private helper for uuid inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">18</td>
+<td><code>class User</code></td>
+<td>SQLAlchemy ORM model for the user entity/table.</td>
+</tr>
+<tr>
+<td style="text-align: right;">31</td>
+<td><code>class Property</code></td>
+<td>SQLAlchemy ORM model for the property entity/table.</td>
+</tr>
+<tr>
+<td style="text-align: right;">59</td>
+<td><code>class Lead</code></td>
+<td>SQLAlchemy ORM model for the lead entity/table.</td>
+</tr>
+<tr>
+<td style="text-align: right;">70</td>
+<td><code>class ChatMessage</code></td>
+<td>SQLAlchemy ORM model for the chat message entity/table.</td>
+</tr>
+<tr>
+<td style="text-align: right;">82</td>
+<td><code>class Event</code></td>
+<td>SQLAlchemy ORM model for the event entity/table.</td>
+</tr>
+<tr>
+<td style="text-align: right;">94</td>
+<td><code>class Review</code></td>
+<td>SQLAlchemy ORM model for the review entity/table.</td>
+</tr>
+<tr>
+<td style="text-align: right;">111</td>
+<td><code>class DeedVerification</code></td>
+<td>SQLAlchemy ORM model for the deed verification entity/table.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappdbsessionpy"><code>backend/app/db/session.py</code></h3>
+<ul>
+<li>Layer: SQL Persistence</li>
+<li>Lines: 177</li>
+<li>Purpose: SQLAlchemy engine/session setup, Azure SQL URL normalization, SQLite fallback, table creation, and demo user seeding.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">21</td>
+<td><code>function _fallback_sqlite_url</code></td>
+<td>Private helper for fallback sqlite url inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">25</td>
+<td><code>function _normalize_database_url</code></td>
+<td>Private helper for normalize database url inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">42</td>
+<td><code>function _resolve_database_url</code></td>
+<td>Private helper for resolve database url inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">51</td>
+<td><code>function _create_engine</code></td>
+<td>Private helper for create engine inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">70</td>
+<td><code>function _create_sqlite_engine</code></td>
+<td>Private helper for create sqlite engine inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">74</td>
+<td><code>function _switch_to_fallback_sqlite</code></td>
+<td>Use local SQLite when the configured SQL database is unavailable in dev.</td>
+</tr>
+<tr>
+<td style="text-align: right;">86</td>
+<td><code>function _ensure_connection</code></td>
+<td>Private helper for ensure connection inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">96</td>
+<td><code>function _seed_demo_users</code></td>
+<td>Private helper for seed demo users inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">144</td>
+<td><code>function init_db</code></td>
+<td>Function/helper implementing init db behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">159</td>
+<td><code>function db_session</code></td>
+<td>Function/helper implementing db session behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">172</td>
+<td><code>function get_db</code></td>
+<td>Retrieves or derives get db for this module.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappdemo_sellerspy"><code>backend/app/demo_sellers.py</code></h3>
+<ul>
+<li>Layer: Backend App Core</li>
+<li>Lines: 87</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">11</td>
+<td><code>class DemoSeller</code></td>
+<td>Class grouping data and behavior for demo seller.</td>
+</tr>
+<tr>
+<td style="text-align: right;">82</td>
+<td><code>function seller_for_property_position</code></td>
+<td>Return the seller for a 1-based property position.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappmainpy"><code>backend/app/main.py</code></h3>
+<ul>
+<li>Layer: Backend App Core</li>
+<li>Lines: 101</li>
+<li>Purpose: FastAPI entry point: startup/shutdown lifespan, middleware, static image serving, router registration, and health endpoint.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">22</td>
+<td><code>async function lifespan</code></td>
+<td>Runs startup/shutdown work: preloads property data, initializes SQL tables/demo users, connects to MongoDB if available, and closes Mongo on shutdown.</td>
+</tr>
+<tr>
+<td style="text-align: right;">99</td>
+<td><code>async function health_check</code></td>
+<td>Returns a small health payload for uptime checks and tests.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappmodels__init__py"><code>backend/app/models/__init__.py</code></h3>
+<ul>
+<li>Layer: Mongo/Pydantic Models</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendappmodelsdeedpy"><code>backend/app/models/deed.py</code></h3>
+<ul>
+<li>Layer: Mongo/Pydantic Models</li>
+<li>Lines: 27</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">7</td>
+<td><code>function generate_uuid</code></td>
+<td>Function/helper implementing generate uuid behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td><code>class DeedVerificationModel</code></td>
+<td>Pydantic model/schema for deed verification model data.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappmodelspropertypy"><code>backend/app/models/property.py</code></h3>
+<ul>
+<li>Layer: Mongo/Pydantic Models</li>
+<li>Lines: 65</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">7</td>
+<td><code>function generate_uuid</code></td>
+<td>Function/helper implementing generate uuid behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td><code>class PropertyModel</code></td>
+<td>Pydantic model/schema for property model data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">43</td>
+<td><code>class LandParcelModel</code></td>
+<td>Pydantic model/schema for land parcel model data.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappmodelsuserpy"><code>backend/app/models/user.py</code></h3>
+<ul>
+<li>Layer: Mongo/Pydantic Models</li>
+<li>Lines: 31</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">7</td>
+<td><code>function generate_uuid</code></td>
+<td>Function/helper implementing generate uuid behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td><code>class UserModel</code></td>
+<td>Pydantic model/schema for user model data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">23</td>
+<td><code>class UserAlertModel</code></td>
+<td>Pydantic model/schema for user alert model data.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendapprouters__init__py"><code>backend/app/routers/__init__.py</code></h3>
+<ul>
+<li>Layer: Backend API Routers</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendapproutersagentspy"><code>backend/app/routers/agents.py</code></h3>
+<ul>
+<li>Layer: Backend API Routers</li>
+<li>Lines: 150</li>
+<li>Purpose: PropBot API for chat, voice, session history, GUI commands, natural-language search, and legal document Q&amp;A.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">15</td>
+<td><code>class ChatRequest</code></td>
+<td>Pydantic request/response schema used by this router for chat request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">21</td>
+<td><code>class ChatResponse</code></td>
+<td>Pydantic request/response schema used by this router for chat response payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">29</td>
+<td><code>class GUICommandRequest</code></td>
+<td>Pydantic request/response schema used by this router for guicommand request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">36</td>
+<td><code>class SearchRequest</code></td>
+<td>Pydantic request/response schema used by this router for search request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">41</td>
+<td><code>class DocQueryRequest</code></td>
+<td>Pydantic request/response schema used by this router for doc query request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">46</td>
+<td><code>class VoiceRequest</code></td>
+<td>Pydantic request/response schema used by this router for voice request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">52</td>
+<td><code>function _tts_text</code></td>
+<td>Private helper for tts text inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">58</td>
+<td><code>async function agent_chat</code></td>
+<td>Send a message to the Universal GUI Agent (PropBot).</td>
+</tr>
+<tr>
+<td style="text-align: right;">73</td>
+<td><code>async function agent_voice</code></td>
+<td>Generate PropBot speech with ElevenLabs while keeping the API key server-side.</td>
+</tr>
+<tr>
+<td style="text-align: right;">119</td>
+<td><code>async function get_session</code></td>
+<td>Retrieve conversation history for an agent session.</td>
+</tr>
+<tr>
+<td style="text-align: right;">128</td>
+<td><code>async function issue_gui_command</code></td>
+<td>Agent issues a GUI command to the frontend (navigate, filter, compare).</td>
+</tr>
+<tr>
+<td style="text-align: right;">137</td>
+<td><code>async function agent_search</code></td>
+<td>Agent-driven natural language property search.</td>
+</tr>
+<tr>
+<td style="text-align: right;">146</td>
+<td><code>async function doc_query</code></td>
+<td>RAG query on legal documents (deeds, RERA, zoning laws).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendapproutersanalyticspy"><code>backend/app/routers/analytics.py</code></h3>
+<ul>
+<li>Layer: Backend API Routers</li>
+<li>Lines: 478</li>
+<li>Purpose: Market and admin analytics API, including Power BI-ready seller operations datasets.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">27</td>
+<td><code>async function market_trends</code></td>
+<td>Price trends by locality over the specified number of months.</td>
+</tr>
+<tr>
+<td style="text-align: right;">37</td>
+<td><code>async function price_heatmap</code></td>
+<td>GeoJSON heatmap for price intensity across Hyderabad.</td>
+</tr>
+<tr>
+<td style="text-align: right;">62</td>
+<td><code>async function top_localities</code></td>
+<td>Top performing localities ranked by metric.</td>
+</tr>
+<tr>
+<td style="text-align: right;">77</td>
+<td><code>async function commercial_zones</code></td>
+<td>Commercial zone intelligence for Hyderabad.</td>
+</tr>
+<tr>
+<td style="text-align: right;">91</td>
+<td><code>function _month_keys</code></td>
+<td>Private helper for month keys inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">104</td>
+<td><code>function _demo_seller_ops</code></td>
+<td>Private helper for demo seller ops inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">254</td>
+<td><code>function _powerbi_embed_url</code></td>
+<td>Private helper for powerbi embed url inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">263</td>
+<td><code>async function admin_seller_ops</code></td>
+<td>Operational admin analytics for sellers, sold deals, leads, and reviews.</td>
+</tr>
+<tr>
+<td style="text-align: right;">446</td>
+<td><code>async function admin_powerbi_dataset</code></td>
+<td>Power BI-ready flat datasets for admin seller operations.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendapproutersauthpy"><code>backend/app/routers/auth.py</code></h3>
+<ul>
+<li>Layer: Backend API Routers</li>
+<li>Lines: 112</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">18</td>
+<td><code>class RegisterRequest</code></td>
+<td>Pydantic request/response schema used by this router for register request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">26</td>
+<td><code>class TokenResponse</code></td>
+<td>Pydantic request/response schema used by this router for token response payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">35</td>
+<td><code>class RefreshRequest</code></td>
+<td>Pydantic request/response schema used by this router for refresh request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">40</td>
+<td><code>async function register</code></td>
+<td>Register a new user account.</td>
+</tr>
+<tr>
+<td style="text-align: right;">74</td>
+<td><code>async function login</code></td>
+<td>Login with email + password, returns JWT tokens.</td>
+</tr>
+<tr>
+<td style="text-align: right;">102</td>
+<td><code>async function refresh_token</code></td>
+<td>Refresh access token using refresh token (mock).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendapprouterschatpy"><code>backend/app/routers/chat.py</code></h3>
+<ul>
+<li>Layer: Backend API Routers</li>
+<li>Lines: 359</li>
+<li>Purpose: Buyer/seller WebSocket chat API with JWT validation, persisted messages, active threads, history, and safety alerts.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">18</td>
+<td><code>class ConnectionManager</code></td>
+<td>Manages WebSocket connections per channel.</td>
+</tr>
+<tr>
+<td style="text-align: right;">21</td>
+<td><code>method ConnectionManager.__init__</code></td>
+<td>Method on <code>ConnectionManager</code> that handles init behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">24</td>
+<td><code>async method ConnectionManager.connect</code></td>
+<td>Method on <code>ConnectionManager</code> that handles connect behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">28</td>
+<td><code>method ConnectionManager.disconnect</code></td>
+<td>Method on <code>ConnectionManager</code> that handles disconnect behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">32</td>
+<td><code>async method ConnectionManager.broadcast</code></td>
+<td>Method on <code>ConnectionManager</code> that handles broadcast behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">44</td>
+<td><code>function _channel_property_id</code></td>
+<td>Private helper for channel property id inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">51</td>
+<td><code>function _property_summary</code></td>
+<td>Private helper for property summary inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">71</td>
+<td><code>function _visible_seller_properties</code></td>
+<td>Return properties whose chats this seller/admin may see.</td>
+</tr>
+<tr>
+<td style="text-align: right;">92</td>
+<td><code>function _get_token_from_websocket</code></td>
+<td>Private helper for get token from websocket inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">101</td>
+<td><code>async function _get_user_from_websocket</code></td>
+<td>Private helper for get user from websocket inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">127</td>
+<td><code>async function websocket_chat</code></td>
+<td>Validates token, accepts messages, prevents sender impersonation, persists chat rows, and broadcasts to the channel.</td>
+</tr>
+<tr>
+<td style="text-align: right;">188</td>
+<td><code>async function start_property_chat</code></td>
+<td>Mark a buyer's property chat as active as soon as they open the chat page.</td>
+</tr>
+<tr>
+<td style="text-align: right;">250</td>
+<td><code>async function get_seller_active_chats</code></td>
+<td>Return active chat threads only for properties owned by the seller.</td>
+</tr>
+<tr>
+<td style="text-align: right;">292</td>
+<td><code>async function get_chat_history</code></td>
+<td>Fetch chat history for a channel (JWT protected).</td>
+</tr>
+<tr>
+<td style="text-align: right;">328</td>
+<td><code>async function send_visit_alert</code></td>
+<td>Send 'visit before payment' nudge alert to the buyer (JWT protected).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendapproutersdeedspy"><code>backend/app/routers/deeds.py</code></h3>
+<ul>
+<li>Layer: Backend API Routers</li>
+<li>Lines: 325</li>
+<li>Purpose: Deed/legal workflow API for uploads, OCR verification, admin review, local file serving, stamp duty, timeline, and RERA checks.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">24</td>
+<td><code>class VerificationDecision</code></td>
+<td>Pydantic request/response schema used by this router for verification decision payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">30</td>
+<td><code>function _latest_for_parcel</code></td>
+<td>Private helper for latest for parcel inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">39</td>
+<td><code>function _can_view_verification</code></td>
+<td>Private helper for can view verification inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">44</td>
+<td><code>async function upload_deed_documents</code></td>
+<td>Receives deed files, creates a verification row, runs OCR/name/legal checks, and returns serialized status.</td>
+</tr>
+<tr>
+<td style="text-align: right;">81</td>
+<td><code>async function get_admin_deed_summary</code></td>
+<td>Admin stats for properties, users, and deed verification automation.</td>
+</tr>
+<tr>
+<td style="text-align: right;">126</td>
+<td><code>async function list_admin_verifications</code></td>
+<td>Admin list of buyer-submitted verification packets and documents.</td>
+</tr>
+<tr>
+<td style="text-align: right;">146</td>
+<td><code>async function update_admin_verification</code></td>
+<td>Function/helper implementing update admin verification behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">173</td>
+<td><code>async function get_deed_file</code></td>
+<td>Serve locally stored deed files to the submitter or an admin.</td>
+</tr>
+<tr>
+<td style="text-align: right;">195</td>
+<td><code>async function get_deed_status</code></td>
+<td>Get the current verification status for a parcel.</td>
+</tr>
+<tr>
+<td style="text-align: right;">210</td>
+<td><code>async function trigger_verification</code></td>
+<td>Re-run OCR, name match, and legal checklist for the latest parcel upload.</td>
+</tr>
+<tr>
+<td style="text-align: right;">226</td>
+<td><code>async function get_legal_timeline</code></td>
+<td>Estimate days-to-completion for deed transfer using ML heuristics.</td>
+</tr>
+<tr>
+<td style="text-align: right;">244</td>
+<td><code>async function calculate_stamp_duty</code></td>
+<td>Calculate stamp duty based on state and property value.</td>
+</tr>
+<tr>
+<td style="text-align: right;">269</td>
+<td><code>async function check_rera</code></td>
+<td>Check RERA registration status through the official Telangana RERA source.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendapprouterspredictpy"><code>backend/app/routers/predict.py</code></h3>
+<ul>
+<li>Layer: Backend API Routers</li>
+<li>Lines: 111</li>
+<li>Purpose: ML prediction API for price, appreciation, commercial score, anomaly detection, and locality insights.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">10</td>
+<td><code>class LandPriceRequest</code></td>
+<td>Pydantic request/response schema used by this router for land price request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">22</td>
+<td><code>class LandPriceResponse</code></td>
+<td>Pydantic request/response schema used by this router for land price response payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">30</td>
+<td><code>class AppreciationRequest</code></td>
+<td>Pydantic request/response schema used by this router for appreciation request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">36</td>
+<td><code>class AppreciationResponse</code></td>
+<td>Pydantic request/response schema used by this router for appreciation response payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">41</td>
+<td><code>class CommercialScoreRequest</code></td>
+<td>Pydantic request/response schema used by this router for commercial score request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">50</td>
+<td><code>class CommercialScoreResponse</code></td>
+<td>Pydantic request/response schema used by this router for commercial score response payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">57</td>
+<td><code>class AnomalyRequest</code></td>
+<td>Pydantic request/response schema used by this router for anomaly request payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">66</td>
+<td><code>class AnomalyResponse</code></td>
+<td>Pydantic request/response schema used by this router for anomaly response payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">73</td>
+<td><code>async function predict_land_price</code></td>
+<td>Predict land/property price using XGBoost model.</td>
+</tr>
+<tr>
+<td style="text-align: right;">82</td>
+<td><code>async function predict_appreciation</code></td>
+<td>Forecast price appreciation for 1/3/5 years using Prophet + LSTM.</td>
+</tr>
+<tr>
+<td style="text-align: right;">91</td>
+<td><code>async function predict_commercial_score</code></td>
+<td>Predict commercial viability score (0-100) for a land parcel.</td>
+</tr>
+<tr>
+<td style="text-align: right;">98</td>
+<td><code>async function detect_anomaly</code></td>
+<td>Detect if a listing has suspicious pricing (Isolation Forest).</td>
+</tr>
+<tr>
+<td style="text-align: right;">105</td>
+<td><code>async function get_locality_insights</code></td>
+<td>ML-based locality score: schools, hospitals, transit, safety, growth.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendapprouterspropertiespy"><code>backend/app/routers/properties.py</code></h3>
+<ul>
+<li>Layer: Backend API Routers</li>
+<li>Lines: 286</li>
+<li>Purpose: Property API that merges SQL listings with CSV/JSON fallback listings and exposes detail, map, nearby, history, verify, and delete behavior.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">17</td>
+<td><code>class PropertyCreate</code></td>
+<td>Pydantic request/response schema used by this router for property create payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">32</td>
+<td><code>function _property_to_dict</code></td>
+<td>Converts a SQLAlchemy Property row into the frontend JSON shape.</td>
+</tr>
+<tr>
+<td style="text-align: right;">59</td>
+<td><code>async function create_property</code></td>
+<td>Create a new property listing (seller/admin).</td>
+</tr>
+<tr>
+<td style="text-align: right;">108</td>
+<td><code>async function list_properties_endpoint</code></td>
+<td>Applies filters to SQL listings, fetches matching CSV fallback records, deduplicates, and returns a page of results.</td>
+</tr>
+<tr>
+<td style="text-align: right;">196</td>
+<td><code>async function properties_geojson</code></td>
+<td>GeoJSON FeatureCollection of all property pins for map view.</td>
+</tr>
+<tr>
+<td style="text-align: right;">202</td>
+<td><code>async function get_property_endpoint</code></td>
+<td>Get full property detail by ID (DB merged with CSV).</td>
+</tr>
+<tr>
+<td style="text-align: right;">219</td>
+<td><code>async function get_nearby</code></td>
+<td>Nearby POIs for a property — returns NearbyPOI-compatible list.</td>
+</tr>
+<tr>
+<td style="text-align: right;">235</td>
+<td><code>async function get_price_history</code></td>
+<td>Historical price trend for the property's locality.</td>
+</tr>
+<tr>
+<td style="text-align: right;">244</td>
+<td><code>class PropertyPatch</code></td>
+<td>Pydantic request/response schema used by this router for property patch payloads.</td>
+</tr>
+<tr>
+<td style="text-align: right;">249</td>
+<td><code>async function patch_property</code></td>
+<td>Partial update for a property (used by admin approve).</td>
+</tr>
+<tr>
+<td style="text-align: right;">273</td>
+<td><code>async function delete_property</code></td>
+<td>Function/helper implementing delete property behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappschemas__init__py"><code>backend/app/schemas/__init__.py</code></h3>
+<ul>
+<li>Layer: API Schemas</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendappschemaspropertypy"><code>backend/app/schemas/property.py</code></h3>
+<ul>
+<li>Layer: API Schemas</li>
+<li>Lines: 100</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">8</td>
+<td><code>class PropertyBase</code></td>
+<td>Pydantic model/schema for property base data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">34</td>
+<td><code>class PropertyCreate</code></td>
+<td>Pydantic model/schema for property create data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">38</td>
+<td><code>class PropertyUpdate</code></td>
+<td>Pydantic model/schema for property update data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">46</td>
+<td><code>class PropertyResponse</code></td>
+<td>Pydantic model/schema for property response data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">57</td>
+<td><code>class PropertyListResponse</code></td>
+<td>Pydantic model/schema for property list response data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">64</td>
+<td><code>class GeoJSONFeature</code></td>
+<td>Pydantic model/schema for geo jsonfeature data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">70</td>
+<td><code>class GeoJSONCollection</code></td>
+<td>Pydantic model/schema for geo jsoncollection data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">75</td>
+<td><code>class NearbyPOI</code></td>
+<td>Pydantic model/schema for nearby poi data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">83</td>
+<td><code>class PriceHistoryPoint</code></td>
+<td>Pydantic model/schema for price history point data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">90</td>
+<td><code>class ReviewCreate</code></td>
+<td>Pydantic model/schema for review create data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">96</td>
+<td><code>class ReviewResponse</code></td>
+<td>Pydantic model/schema for review response data.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappservices__init__py"><code>backend/app/services/__init__.py</code></h3>
+<ul>
+<li>Layer: Backend Services</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendappservicesagent_servicepy"><code>backend/app/services/agent_service.py</code></h3>
+<ul>
+<li>Layer: Backend Services</li>
+<li>Lines: 387</li>
+<li>Purpose: Lightweight PropBot service for intent parsing, curated replies, GUI commands, OpenAI calls, sessions, search, and RAG delegation.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">33</td>
+<td><code>function _build_gui_command</code></td>
+<td>Private helper for build gui command inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">37</td>
+<td><code>function _build_navigation_link</code></td>
+<td>Private helper for build navigation link inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">41</td>
+<td><code>function _format_inr</code></td>
+<td>Private helper for format inr inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">52</td>
+<td><code>function _query_from_params</code></td>
+<td>Private helper for query from params inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">61</td>
+<td><code>function _build_navigation_links</code></td>
+<td>Private helper for build navigation links inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">118</td>
+<td><code>function _compose_curated_reply</code></td>
+<td>Private helper for compose curated reply inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">205</td>
+<td><code>function _parse_intent</code></td>
+<td>Extracts simple user intent and filters from plain English for PropBot.</td>
+</tr>
+<tr>
+<td style="text-align: right;">257</td>
+<td><code>async function _call_azure_openai</code></td>
+<td>Call Azure OpenAI with conversation history.</td>
+</tr>
+<tr>
+<td style="text-align: right;">299</td>
+<td><code>function _fallback_response</code></td>
+<td>Private helper for fallback response inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">327</td>
+<td><code>class AgentService</code></td>
+<td>Class grouping data and behavior for agent service.</td>
+</tr>
+<tr>
+<td style="text-align: right;">328</td>
+<td><code>method AgentService.__init__</code></td>
+<td>Method on <code>AgentService</code> that handles init behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">331</td>
+<td><code>async method AgentService.chat</code></td>
+<td>Method on <code>AgentService</code> that handles chat behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">356</td>
+<td><code>async method AgentService.get_session</code></td>
+<td>Method on <code>AgentService</code> that handles get session behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">362</td>
+<td><code>async method AgentService.issue_gui_command</code></td>
+<td>Method on <code>AgentService</code> that handles issue gui command behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">365</td>
+<td><code>async method AgentService.natural_language_search</code></td>
+<td>Method on <code>AgentService</code> that handles natural language search behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">373</td>
+<td><code>async method AgentService.rag_query</code></td>
+<td>Method on <code>AgentService</code> that handles rag query behavior.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappservicesdata_servicepy"><code>backend/app/services/data_service.py</code></h3>
+<ul>
+<li>Layer: Backend Services</li>
+<li>Lines: 633</li>
+<li>Purpose: CSV/JSON-backed Hyderabad property catalog, normalization, deterministic coordinates/images/sellers, filtering, GeoJSON, and analytics.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">189</td>
+<td><code>function _stable_hash</code></td>
+<td>Private helper for stable hash inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">193</td>
+<td><code>function _pick_images</code></td>
+<td>Return a deterministic set of relevant image URLs for a property.</td>
+</tr>
+<tr>
+<td style="text-align: right;">202</td>
+<td><code>function _apply_demo_seller_ownership</code></td>
+<td>Assign one deterministic seller account to each block of 100 demo properties.</td>
+</tr>
+<tr>
+<td style="text-align: right;">212</td>
+<td><code>function _normalize_locality</code></td>
+<td>Private helper for normalize locality inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">222</td>
+<td><code>function _get_coords</code></td>
+<td>Return deterministic coordinates for a property within a Hyderabad locality.</td>
+</tr>
+<tr>
+<td style="text-align: right;">251</td>
+<td><code>function _build_amenities</code></td>
+<td>Private helper for build amenities inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">255</td>
+<td><code>function _row_to_property</code></td>
+<td>Transforms one raw CSV row into the full property object used by the UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">393</td>
+<td><code>function _load_data</code></td>
+<td>Loads property JSON/CSV once and falls back to synthetic data if loading fails.</td>
+</tr>
+<tr>
+<td style="text-align: right;">441</td>
+<td><code>function _build_fallback</code></td>
+<td>Generate 80 synthetic Hyderabad properties if CSV is unavailable.</td>
+</tr>
+<tr>
+<td style="text-align: right;">490</td>
+<td><code>function get_properties</code></td>
+<td>Retrieves or derives get properties for this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">540</td>
+<td><code>function get_property_by_id</code></td>
+<td>Retrieves or derives get property by id for this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">553</td>
+<td><code>function get_localities</code></td>
+<td>Retrieves or derives get localities for this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">565</td>
+<td><code>function get_geojson</code></td>
+<td>Return all Hyderabad properties as GeoJSON FeatureCollection.</td>
+</tr>
+<tr>
+<td style="text-align: right;">596</td>
+<td><code>function get_analytics</code></td>
+<td>Compute real analytics from the loaded Hyderabad dataset.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappservicesdeed_servicepy"><code>backend/app/services/deed_service.py</code></h3>
+<ul>
+<li>Layer: Backend Services</li>
+<li>Lines: 357</li>
+<li>Purpose: Deed file storage, OCR/local extraction, fuzzy name matching, legal checklist/RAG, and verification serialization.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">28</td>
+<td><code>function _use_cloud_integrations</code></td>
+<td>Private helper for use cloud integrations inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">33</td>
+<td><code>function _safe_filename</code></td>
+<td>Private helper for safe filename inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">38</td>
+<td><code>function _json_dump</code></td>
+<td>Private helper for json dump inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">42</td>
+<td><code>function _json_load</code></td>
+<td>Private helper for json load inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">51</td>
+<td><code>async function _upload_to_blob</code></td>
+<td>Stores a deed file in Azure Blob in cloud mode or local storage in demo mode.</td>
+</tr>
+<tr>
+<td style="text-align: right;">96</td>
+<td><code>function _extract_owner_name</code></td>
+<td>Private helper for extract owner name inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">108</td>
+<td><code>async function _run_ocr</code></td>
+<td>Run Azure Document Intelligence or a deterministic local fallback.</td>
+</tr>
+<tr>
+<td style="text-align: right;">165</td>
+<td><code>function _fuzzy_name_match</code></td>
+<td>Compare two names using fuzzy matching.</td>
+</tr>
+<tr>
+<td style="text-align: right;">176</td>
+<td><code>function serialize_verification</code></td>
+<td>Function/helper implementing serialize verification behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">201</td>
+<td><code>class DeedService</code></td>
+<td>Class grouping data and behavior for deed service.</td>
+</tr>
+<tr>
+<td style="text-align: right;">202</td>
+<td><code>async method DeedService.upload_and_create_verification</code></td>
+<td>Upload deed files and create a verification record.</td>
+</tr>
+<tr>
+<td style="text-align: right;">236</td>
+<td><code>async method DeedService.run_verification</code></td>
+<td>Run OCR, fuzzy name matching, and the legal RAG checklist.</td>
+</tr>
+<tr>
+<td style="text-align: right;">275</td>
+<td><code>async method DeedService.run_legal_check</code></td>
+<td>Use the RAG service to attach a legal checklist summary.</td>
+</tr>
+<tr>
+<td style="text-align: right;">319</td>
+<td><code>method DeedService._fallback_legal_summary</code></td>
+<td>Method on <code>DeedService</code> that handles fallback legal summary behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">328</td>
+<td><code>async method DeedService.estimate_legal_timeline</code></td>
+<td>Estimate days-to-completion for deed transfer using ML heuristics.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappservicesgeocoding_servicepy"><code>backend/app/services/geocoding_service.py</code></h3>
+<ul>
+<li>Layer: Backend Services</li>
+<li>Lines: 66</li>
+<li>Purpose: Nearby POI lookup with Google Places integration and local mock fallback.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">6</td>
+<td><code>async function get_nearby_pois</code></td>
+<td>Fetch nearby POIs from Google Places API.</td>
+</tr>
+<tr>
+<td style="text-align: right;">46</td>
+<td><code>function _haversine</code></td>
+<td>Private helper for haversine inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">56</td>
+<td><code>function _mock_pois</code></td>
+<td>Private helper for mock pois inside this module.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappservicesml_servicepy"><code>backend/app/services/ml_service.py</code></h3>
+<ul>
+<li>Layer: Backend Services</li>
+<li>Lines: 172</li>
+<li>Purpose: ML inference facade with optional pickle artifacts and heuristic fallbacks for local demos.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">12</td>
+<td><code>class MLService</code></td>
+<td>Wraps all ML model inference.</td>
+</tr>
+<tr>
+<td style="text-align: right;">19</td>
+<td><code>method MLService.__init__</code></td>
+<td>Method on <code>MLService</code> that handles init behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">34</td>
+<td><code>method MLService._load_price_model</code></td>
+<td>Method on <code>MLService</code> that handles load price model behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">40</td>
+<td><code>method MLService._load_commercial_model</code></td>
+<td>Method on <code>MLService</code> that handles load commercial model behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">46</td>
+<td><code>async method MLService.predict_price</code></td>
+<td>Predict property price.</td>
+</tr>
+<tr>
+<td style="text-align: right;">73</td>
+<td><code>async method MLService.predict_appreciation</code></td>
+<td>Forecast appreciation using locality growth trends.</td>
+</tr>
+<tr>
+<td style="text-align: right;">94</td>
+<td><code>async method MLService.predict_commercial_score</code></td>
+<td>Compute commercial viability score 0-100.</td>
+</tr>
+<tr>
+<td style="text-align: right;">123</td>
+<td><code>async method MLService.detect_anomaly</code></td>
+<td>Detect anomalous pricing using Isolation Forest heuristic.</td>
+</tr>
+<tr>
+<td style="text-align: right;">140</td>
+<td><code>async method MLService.get_locality_insights</code></td>
+<td>Method on <code>MLService</code> that handles get locality insights behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">155</td>
+<td><code>async method MLService.get_price_history</code></td>
+<td>Return 12-month synthetic price history for a locality.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendappservicesrag_servicepy"><code>backend/app/services/rag_service.py</code></h3>
+<ul>
+<li>Layer: Backend Services</li>
+<li>Lines: 97</li>
+<li>Purpose: Legal RAG service using FAISS/Azure OpenAI when configured and deterministic legal fallbacks otherwise.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">7</td>
+<td><code>function _cloud_rag_enabled</code></td>
+<td>Private helper for cloud rag enabled inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">12</td>
+<td><code>class RAGService</code></td>
+<td>Class grouping data and behavior for ragservice.</td>
+</tr>
+<tr>
+<td style="text-align: right;">13</td>
+<td><code>method RAGService.__init__</code></td>
+<td>Method on <code>RAGService</code> that handles init behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">17</td>
+<td><code>method RAGService._init_rag</code></td>
+<td>Initialize FAISS vector store from legal documents.</td>
+</tr>
+<tr>
+<td style="text-align: right;">69</td>
+<td><code>async method RAGService.query</code></td>
+<td>Method on <code>RAGService</code> that handles query behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">81</td>
+<td><code>method RAGService._fallback</code></td>
+<td>Method on <code>RAGService</code> that handles fallback behavior.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendapputils__init__py"><code>backend/app/utils/__init__.py</code></h3>
+<ul>
+<li>Layer: Backend Utilities</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendapputilsloggingpy"><code>backend/app/utils/logging.py</code></h3>
+<ul>
+<li>Layer: Backend Utilities</li>
+<li>Lines: 34</li>
+<li>Purpose: structlog setup with optional Azure Application Insights exporter.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">7</td>
+<td><code>function setup_logging</code></td>
+<td>Function/helper implementing setup logging behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendapputilssecuritypy"><code>backend/app/utils/security.py</code></h3>
+<ul>
+<li>Layer: Backend Utilities</li>
+<li>Lines: 96</li>
+<li>Purpose: Password hashing, JWT generation/decoding, current-user dependency, mock-token fallback, and role guards.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">20</td>
+<td><code>function hash_password</code></td>
+<td>Function/helper implementing hash password behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">24</td>
+<td><code>function verify_password</code></td>
+<td>Function/helper implementing verify password behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">31</td>
+<td><code>function create_access_token</code></td>
+<td>Creates access token data, UI, or files for this workflow.</td>
+</tr>
+<tr>
+<td style="text-align: right;">41</td>
+<td><code>function create_refresh_token</code></td>
+<td>Creates refresh token data, UI, or files for this workflow.</td>
+</tr>
+<tr>
+<td style="text-align: right;">50</td>
+<td><code>function decode_token</code></td>
+<td>Function/helper implementing decode token behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">57</td>
+<td><code>class MockUser</code></td>
+<td>Class grouping data and behavior for mock user.</td>
+</tr>
+<tr>
+<td style="text-align: right;">58</td>
+<td><code>method MockUser.__init__</code></td>
+<td>Method on <code>MockUser</code> that handles init behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">63</td>
+<td><code>async function get_current_user</code></td>
+<td>Retrieves or derives get current user for this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">89</td>
+<td><code>function require_roles</code></td>
+<td>Function/helper implementing require roles behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backenddatasample_deedsreadmemd"><code>backend/data/sample_deeds/README.md</code></h3>
+<ul>
+<li>Layer: Sample Legal Data Tools</li>
+<li>Lines: 58</li>
+<li>Purpose: Repository documentation or ignore/configuration file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backenddatasample_deedsbulk_upload_deedsjson"><code>backend/data/sample_deeds/bulk_upload_deeds.json</code></h3>
+<ul>
+<li>Layer: Sample Legal Data Tools</li>
+<li>Lines: 129</li>
+<li>Purpose: JSON configuration or structured data file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backenddatasample_deedscreate_bulk_upload_filespy"><code>backend/data/sample_deeds/create_bulk_upload_files.py</code></h3>
+<ul>
+<li>Layer: Sample Legal Data Tools</li>
+<li>Lines: 185</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">11</td>
+<td><code>function create_bulk_upload_json</code></td>
+<td>Create a JSON file with all sample deeds for bulk upload.</td>
+</tr>
+<tr>
+<td style="text-align: right;">160</td>
+<td><code>function create_csv_upload_file</code></td>
+<td>Create a CSV file for bulk upload.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backenddatasample_deedsupload_sample_deedspy"><code>backend/data/sample_deeds/upload_sample_deeds.py</code></h3>
+<ul>
+<li>Layer: Sample Legal Data Tools</li>
+<li>Lines: 208</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">14</td>
+<td><code>class DeedUploader</code></td>
+<td>Class grouping data and behavior for deed uploader.</td>
+</tr>
+<tr>
+<td style="text-align: right;">15</td>
+<td><code>method DeedUploader.__init__</code></td>
+<td>Method on <code>DeedUploader</code> that handles init behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td><code>method DeedUploader.parse_deed_content</code></td>
+<td>Parse deed content and extract structured data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">57</td>
+<td><code>method DeedUploader.create_deed_payload</code></td>
+<td>Create API payload from parsed deed data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">98</td>
+<td><code>method DeedUploader.upload_deed</code></td>
+<td>Upload a single deed to the API.</td>
+</tr>
+<tr>
+<td style="text-align: right;">119</td>
+<td><code>method DeedUploader.upload_all_sample_deeds</code></td>
+<td>Upload all sample deeds from the sample_deeds directory.</td>
+</tr>
+<tr>
+<td style="text-align: right;">167</td>
+<td><code>method DeedUploader.generate_upload_manifest</code></td>
+<td>Generate a JSON manifest of uploaded deeds.</td>
+</tr>
+<tr>
+<td style="text-align: right;">190</td>
+<td><code>function main</code></td>
+<td>Main upload function.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backenddatasample_propertiesjson"><code>backend/data/sample_properties.json</code></h3>
+<ul>
+<li>Layer: Backend Support</li>
+<li>Lines: 35627</li>
+<li>Purpose: JSON configuration or structured data file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendml__init__py"><code>backend/ml/__init__.py</code></h3>
+<ul>
+<li>Layer: Backend Support</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendmltraining__init__py"><code>backend/ml/training/__init__.py</code></h3>
+<ul>
+<li>Layer: ML Training</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendmltrainingtrain_allpy"><code>backend/ml/training/train_all.py</code></h3>
+<ul>
+<li>Layer: ML Training</li>
+<li>Lines: 209</li>
+<li>Purpose: Synthetic ML training pipeline for price prediction, commercial scoring, anomaly detection, and appreciation history artifacts.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">28</td>
+<td><code>function generate_property_dataset</code></td>
+<td>Generate synthetic Hyderabad property dataset for training.</td>
+</tr>
+<tr>
+<td style="text-align: right;">70</td>
+<td><code>function train_price_model</code></td>
+<td>Train XGBoost price prediction model.</td>
+</tr>
+<tr>
+<td style="text-align: right;">112</td>
+<td><code>function train_commercial_model</code></td>
+<td>Train Gradient Boosting commercial viability classifier.</td>
+</tr>
+<tr>
+<td style="text-align: right;">144</td>
+<td><code>function train_anomaly_model</code></td>
+<td>Train Isolation Forest for anomaly detection.</td>
+</tr>
+<tr>
+<td style="text-align: right;">168</td>
+<td><code>function train_appreciation_model</code></td>
+<td>Create locality price index for Prophet (synthetic time series).</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendscripts__init__py"><code>backend/scripts/__init__.py</code></h3>
+<ul>
+<li>Layer: Backend Data Scripts</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendscriptsgenerate_synthetic_datapy"><code>backend/scripts/generate_synthetic_data.py</code></h3>
+<ul>
+<li>Layer: Backend Data Scripts</li>
+<li>Lines: 135</li>
+<li>Purpose: Generates realistic Hyderabad property data and optionally inserts it into SQL.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">45</td>
+<td><code>function generate_property</code></td>
+<td>Function/helper implementing generate property behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">94</td>
+<td><code>async function main</code></td>
+<td>Function/helper implementing main behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendscriptsimport_all_datapy"><code>backend/scripts/import_all_data.py</code></h3>
+<ul>
+<li>Layer: Backend Data Scripts</li>
+<li>Lines: 69</li>
+<li>Purpose: Master data import wizard for property and price-history datasets.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">18</td>
+<td><code>function banner</code></td>
+<td>Function/helper implementing banner behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">23</td>
+<td><code>async function main</code></td>
+<td>Function/helper implementing main behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendscriptsimport_price_historypy"><code>backend/scripts/import_price_history.py</code></h3>
+<ul>
+<li>Layer: Backend Data Scripts</li>
+<li>Lines: 106</li>
+<li>Purpose: Imports NHB RESIDEX-style price-history Excel/CSV files into MongoDB.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">17</td>
+<td><code>async function import_price_history</code></td>
+<td>Parses Excel/CSV price history files and imports them into MongoDB.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendscriptsimport_properties_csvpy"><code>backend/scripts/import_properties_csv.py</code></h3>
+<ul>
+<li>Layer: Backend Data Scripts</li>
+<li>Lines: 130</li>
+<li>Purpose: Imports supported real-estate CSV schemas into MongoDB.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">19</td>
+<td><code>async function import_all_csvs</code></td>
+<td>Parses all CSVs in properties_dir and imports them into MongoDB.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendscriptsscrape_imagespy"><code>backend/scripts/scrape_images.py</code></h3>
+<ul>
+<li>Layer: Backend Data Scripts</li>
+<li>Lines: 200</li>
+<li>Purpose: Scrapes property images, validates/resizes them, writes thumbnails, and exports image metadata.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">53</td>
+<td><code>function make_filename</code></td>
+<td>Generate a unique filename from URL hash.</td>
+</tr>
+<tr>
+<td style="text-align: right;">59</td>
+<td><code>function save_image</code></td>
+<td>Download image, save full + thumbnail.</td>
+</tr>
+<tr>
+<td style="text-align: right;">92</td>
+<td><code>function scrape_ddg</code></td>
+<td>Get image URLs using DuckDuckGo search.</td>
+</tr>
+<tr>
+<td style="text-align: right;">106</td>
+<td><code>function scrape_all_images</code></td>
+<td>Scrapes or generates all images data for local datasets.</td>
+</tr>
+<tr>
+<td style="text-align: right;">169</td>
+<td><code>function export_metadata</code></td>
+<td>Create a JSON manifest of all downloaded images.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendscriptsseed_mock_to_mongopy"><code>backend/scripts/seed_mock_to_mongo.py</code></h3>
+<ul>
+<li>Layer: Backend Data Scripts</li>
+<li>Lines: 454</li>
+<li>Purpose: Seeds MongoDB with curated sample properties aligned to frontend demo data.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">439</td>
+<td><code>async function seed_database</code></td>
+<td>Function/helper implementing seed database behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendtest_azure_sqlpy"><code>backend/test_azure_sql.py</code></h3>
+<ul>
+<li>Layer: Backend Support</li>
+<li>Lines: 60</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">10</td>
+<td><code>function sqlalchemy_url_to_pyodbc</code></td>
+<td>Function/helper implementing sqlalchemy url to pyodbc behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendtest_integrationpy"><code>backend/test_integration.py</code></h3>
+<ul>
+<li>Layer: Backend Support</li>
+<li>Lines: 51</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">5</td>
+<td><code>function _safe_text</code></td>
+<td>Private helper for safe text inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td><code>function test_health</code></td>
+<td>Test case that verifies health behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">17</td>
+<td><code>function test_properties</code></td>
+<td>Test case that verifies properties behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">29</td>
+<td><code>function test_chat</code></td>
+<td>Test case that verifies chat behavior.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendtests__init__py"><code>backend/tests/__init__.py</code></h3>
+<ul>
+<li>Layer: Automated Tests</li>
+<li>Lines: 0</li>
+<li>Purpose: Package marker so Python can import this directory as a module.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="backendtestsconftestpy"><code>backend/tests/conftest.py</code></h3>
+<ul>
+<li>Layer: Automated Tests</li>
+<li>Lines: 12</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">7</td>
+<td><code>function event_loop</code></td>
+<td>Create an instance of the default event loop for the test session.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="backendteststest_apipy"><code>backend/tests/test_api.py</code></h3>
+<ul>
+<li>Layer: Automated Tests</li>
+<li>Lines: 189</li>
+<li>Purpose: Main async pytest suite covering backend health, auth, listings, ML, deeds, RERA, analytics, GeoJSON, and agent behavior.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">16</td>
+<td><code>async function test_health</code></td>
+<td>Test case that verifies health behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">24</td>
+<td><code>async function test_demo_admin_login</code></td>
+<td>Test case that verifies demo admin login behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">37</td>
+<td><code>async function test_register_allows_same_email_for_buyer_and_seller_but_not_admin</code></td>
+<td>Test case that verifies register allows same email for buyer and seller but not admin behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">69</td>
+<td><code>async function test_list_properties</code></td>
+<td>Test case that verifies list properties behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">84</td>
+<td><code>async function test_predict_land_price</code></td>
+<td>Test case that verifies predict land price behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">96</td>
+<td><code>async function test_commercial_score</code></td>
+<td>Test case that verifies commercial score behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">109</td>
+<td><code>async function test_appreciation_forecast</code></td>
+<td>Test case that verifies appreciation forecast behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">121</td>
+<td><code>async function test_stamp_duty</code></td>
+<td>Test case that verifies stamp duty behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">131</td>
+<td><code>async function test_rera_check_uses_official_manual_workflow_without_fake_registration</code></td>
+<td>Test case that verifies rera check uses official manual workflow without fake registration behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">143</td>
+<td><code>async function test_market_trends</code></td>
+<td>Test case that verifies market trends behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">150</td>
+<td><code>async function test_geojson</code></td>
+<td>Test case that verifies geojson behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">159</td>
+<td><code>async function test_agent_chat_returns_clear_answer_and_navigation_cards</code></td>
+<td>Test case that verifies agent chat returns clear answer and navigation cards behavior.</td>
+</tr>
+<tr>
+<td style="text-align: right;">175</td>
+<td><code>async function test_agent_voice_requires_elevenlabs_key_when_not_configured</code></td>
+<td>Test case that verifies agent voice requires elevenlabs key when not configured behavior.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-engineeringdatabricks-notebooks01_etl_pipelinepy"><code>data-engineering/databricks-notebooks/01_etl_pipeline.py</code></h3>
+<ul>
+<li>Layer: Data Engineering</li>
+<li>Lines: 101</li>
+<li>Purpose: PySpark/Databricks ETL: raw property JSON to cleaned features and locality price index Delta tables.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="data-engineeringscrape_hyderabadpy"><code>data-engineering/scrape_hyderabad.py</code></h3>
+<ul>
+<li>Layer: Data Engineering</li>
+<li>Lines: 262</li>
+<li>Purpose: Hyderabad dataset generator and optional live image scraper from 99acres.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">50</td>
+<td><code>function _stable_coords_seed</code></td>
+<td>Private helper for stable coords seed inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">54</td>
+<td><code>function deterministic_coords</code></td>
+<td>Function/helper implementing deterministic coords behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">63</td>
+<td><code>function can_fetch</code></td>
+<td>Function/helper implementing can fetch behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">73</td>
+<td><code>function fetch</code></td>
+<td>Function/helper implementing fetch behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">80</td>
+<td><code>function normalize_price</code></td>
+<td>Function/helper implementing normalize price behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">92</td>
+<td><code>function normalize_area</code></td>
+<td>Function/helper implementing normalize area behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">98</td>
+<td><code>function _is_candidate_image_url</code></td>
+<td>Private helper for is candidate image url inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">109</td>
+<td><code>function _extract_image_urls_from_html</code></td>
+<td>Private helper for extract image urls from html inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">128</td>
+<td><code>function _fetch_image_urls_from_listing</code></td>
+<td>Private helper for fetch image urls from listing inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">138</td>
+<td><code>function _scrape_99acres_listing_urls</code></td>
+<td>Private helper for scrape 99acres listing urls inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">158</td>
+<td><code>function _scrape_99acres_image_urls</code></td>
+<td>Private helper for scrape 99acres image urls inside this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">185</td>
+<td><code>function scrape_mock</code></td>
+<td>Generate the Hyderabad dataset and optionally scrape live images from 99acres.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-engineeringutilshtml_helperspy"><code>data-engineering/utils/html_helpers.py</code></h3>
+<ul>
+<li>Layer: Data Engineering</li>
+<li>Lines: 44</li>
+<li>Purpose: Robots.txt, polite fetch, BeautifulSoup, and text helper utilities for scraping.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">11</td>
+<td><code>function can_fetch</code></td>
+<td>Return True if the site’s robots.txt allows the given path.</td>
+</tr>
+<tr>
+<td style="text-align: right;">23</td>
+<td><code>function fetch</code></td>
+<td>GET <code>url</code> with a standard header and a polite pause.</td>
+</tr>
+<tr>
+<td style="text-align: right;">38</td>
+<td><code>function soup_from_response</code></td>
+<td>Convenient wrapper that returns a lxml-parsed soup.</td>
+</tr>
+<tr>
+<td style="text-align: right;">42</td>
+<td><code>function text_or_none</code></td>
+<td>Function/helper implementing text or none behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="datareadmemd"><code>data/README.md</code></h3>
+<ul>
+<li>Layer: Data Assets</li>
+<li>Lines: 58</li>
+<li>Purpose: Repository documentation or ignore/configuration file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="dataimagesimages_manifestjson"><code>data/images/images_manifest.json</code></h3>
+<ul>
+<li>Layer: Data Assets</li>
+<li>Lines: 602</li>
+<li>Purpose: JSON configuration or structured data file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="docker-composeyml"><code>docker-compose.yml</code></h3>
+<ul>
+<li>Layer: Repository Root</li>
+<li>Lines: 64</li>
+<li>Purpose: Local app, MongoDB, and Redis orchestration with environment wiring for Azure, ML, auth, and external APIs.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td><code>yaml section services</code></td>
+<td>Function/helper implementing services behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">61</td>
+<td><code>yaml section volumes</code></td>
+<td>Function/helper implementing volumes behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="docsgenerate_architecture_reportpy"><code>docs/generate_architecture_report.py</code></h3>
+<ul>
+<li>Layer: Repository Root</li>
+<li>Lines: 637</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">163</td>
+<td><code>function relpath</code></td>
+<td>Function/helper implementing relpath behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">167</td>
+<td><code>function should_include</code></td>
+<td>Function/helper implementing should include behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">178</td>
+<td><code>function layer_for</code></td>
+<td>Function/helper implementing layer for behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">195</td>
+<td><code>function read_text</code></td>
+<td>Function/helper implementing read text behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">208</td>
+<td><code>function clean_sentence</code></td>
+<td>Function/helper implementing clean sentence behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">216</td>
+<td><code>function humanize</code></td>
+<td>Function/helper implementing humanize behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">222</td>
+<td><code>function fallback_summary</code></td>
+<td>Function/helper implementing fallback summary behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">247</td>
+<td><code>function extract_symbols</code></td>
+<td>Function/helper implementing extract symbols behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">315</td>
+<td><code>function explain_symbol</code></td>
+<td>Function/helper implementing explain symbol behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">359</td>
+<td><code>function build_files</code></td>
+<td>Function/helper implementing build files behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">379</td>
+<td><code>function render_markdown</code></td>
+<td>Render helper for the markdown section.</td>
+</tr>
+<tr>
+<td style="text-align: right;">566</td>
+<td><code>function write_outputs</code></td>
+<td>Function/helper implementing write outputs behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">626</td>
+<td><code>function main</code></td>
+<td>Function/helper implementing main behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendenvlocal"><code>frontend/.env.local</code></h3>
+<ul>
+<li>Layer: Frontend Support</li>
+<li>Lines: not read; secret values redacted</li>
+<li>Purpose: Local environment-variable file; values are intentionally redacted.</li>
+<li>Functions/classes: environment values only; intentionally not included.</li>
+</ul>
+<h3 id="frontendindexhtml"><code>frontend/index.html</code></h3>
+<ul>
+<li>Layer: Frontend Support</li>
+<li>Lines: 20</li>
+<li>Purpose: HTML shell or static HTML file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="frontendnginxconf"><code>frontend/nginx.conf</code></h3>
+<ul>
+<li>Layer: Frontend Support</li>
+<li>Lines: 30</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="frontendpackage-lockjson"><code>frontend/package-lock.json</code></h3>
+<ul>
+<li>Layer: Frontend Support</li>
+<li>Lines: 3827</li>
+<li>Purpose: Generated npm dependency lockfile.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="frontendpackagejson"><code>frontend/package.json</code></h3>
+<ul>
+<li>Layer: Frontend Support</li>
+<li>Lines: 35</li>
+<li>Purpose: npm package manifest with frontend scripts and dependencies.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="frontendsrcapptsx"><code>frontend/src/App.tsx</code></h3>
+<ul>
+<li>Layer: Frontend App Shell</li>
+<li>Lines: 62</li>
+<li>Purpose: React route shell with protected routes, navbar, page wiring, and global PropBot widget.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">18</td>
+<td><code>function RequireRole</code></td>
+<td>Route guard that redirects missing or unauthorized roles.</td>
+</tr>
+<tr>
+<td style="text-align: right;">26</td>
+<td><code>function App</code></td>
+<td>React component rendering the app UI.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrccomponentsagentagentchattsx"><code>frontend/src/components/Agent/AgentChat.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Components</li>
+<li>Lines: 268</li>
+<li>Purpose: Floating PropBot widget with quick prompts, session chat, voice playback, navigation cards, and GUI command dispatch.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">5</td>
+<td><code>interface NavLink</code></td>
+<td>TypeScript interface describing the shape of nav link data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">12</td>
+<td><code>interface Message</code></td>
+<td>TypeScript interface describing the shape of message data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">25</td>
+<td><code>function AgentChat</code></td>
+<td>React component rendering the agent chat UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">56</td>
+<td><code>function stopVoice</code></td>
+<td>Function/helper implementing stop voice behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">64</td>
+<td><code>function playVoice</code></td>
+<td>Requests TTS audio for a bot message and plays it in the browser.</td>
+</tr>
+<tr>
+<td style="text-align: right;">116</td>
+<td><code>function send</code></td>
+<td>Sends the user prompt to the agent API, appends bot replies, stores session ID, and dispatches GUI commands.</td>
+</tr>
+<tr>
+<td style="text-align: right;">146</td>
+<td><code>function renderMessageText</code></td>
+<td>Render helper for the message text section.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrccomponentspropertypropertycardtsx"><code>frontend/src/components/Property/PropertyCard.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Components</li>
+<li>Lines: 105</li>
+<li>Purpose: Reusable property listing card with image fallback, price/details badges, navigation, and compare action.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">6</td>
+<td><code>interface Props</code></td>
+<td>TypeScript interface describing the shape of props data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">30</td>
+<td><code>function PropertyCard</code></td>
+<td>React component rendering the property card UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">42</td>
+<td><code>function handleImgError</code></td>
+<td>UI event handler for img error actions.</td>
+</tr>
+<tr>
+<td style="text-align: right;">47</td>
+<td><code>function handleCardClick</code></td>
+<td>UI event handler for card click actions.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrccomponentsuinavbartsx"><code>frontend/src/components/UI/Navbar.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Components</li>
+<li>Lines: 84</li>
+<li>Purpose: Role-aware top navigation and auth actions.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">4</td>
+<td><code>function Navbar</code></td>
+<td>React component rendering the navbar UI.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcindexcss"><code>frontend/src/index.css</code></h3>
+<ul>
+<li>Layer: Frontend App Shell</li>
+<li>Lines: 453</li>
+<li>Purpose: Global design system: color tokens, layout helpers, cards, buttons, badges, forms, navbar, hero, maps, chat widget, tables, skeletons, and responsive rules.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="frontendsrcmaintsx"><code>frontend/src/main.tsx</code></h3>
+<ul>
+<li>Layer: Frontend App Shell</li>
+<li>Lines: 11</li>
+<li>Purpose: React entrypoint that mounts the App and imports global styles.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="frontendsrcpagesaddpropertypagetsx"><code>frontend/src/pages/AddPropertyPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 390</li>
+<li>Purpose: Seller/admin multi-step property listing wizard with deed approval gate and final listing submit.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">5</td>
+<td><code>function AddPropertyPage</code></td>
+<td>React component rendering the add property page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">36</td>
+<td><code>function handleNext</code></td>
+<td>Advances the listing wizard, enforces deed verification at step 3, and submits the final property payload.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagesadminpagetsx"><code>frontend/src/pages/AdminPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 845</li>
+<li>Purpose: Admin command center for seller analytics, Power BI exports, listing moderation, and buyer deed verification decisions.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">36</td>
+<td><code>type AdminTab</code></td>
+<td>TypeScript type describing the shape of admin tab data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">38</td>
+<td><code>function getPropertyId</code></td>
+<td>Retrieves or derives get property id for this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">40</td>
+<td><code>function formatDate</code></td>
+<td>Function/helper implementing format date behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">46</td>
+<td><code>function scoreLabel</code></td>
+<td>Function/helper implementing score label behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">51</td>
+<td><code>function percent</code></td>
+<td>Function/helper implementing percent behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">53</td>
+<td><code>function badgeForStatus</code></td>
+<td>Function/helper implementing badge for status behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">61</td>
+<td><code>function downloadFile</code></td>
+<td>Function/helper implementing download file behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">71</td>
+<td><code>function toCsv</code></td>
+<td>Function/helper implementing to csv behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">78</td>
+<td><code>function escape</code></td>
+<td>Function/helper implementing escape behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">87</td>
+<td><code>function AdminPage</code></td>
+<td>React component rendering the admin page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">97</td>
+<td><code>function loadDashboard</code></td>
+<td>Loads property, seller analytics, deed stats, verification rows, and Power BI dataset data in parallel.</td>
+</tr>
+<tr>
+<td style="text-align: right;">122</td>
+<td><code>function handleApprove</code></td>
+<td>UI event handler for approve actions.</td>
+</tr>
+<tr>
+<td style="text-align: right;">133</td>
+<td><code>function handleDelete</code></td>
+<td>UI event handler for delete actions.</td>
+</tr>
+<tr>
+<td style="text-align: right;">146</td>
+<td><code>function openDocument</code></td>
+<td>Function/helper implementing open document behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">166</td>
+<td><code>function handleVerificationDecision</code></td>
+<td>UI event handler for verification decision actions.</td>
+</tr>
+<tr>
+<td style="text-align: right;">240</td>
+<td><code>function renderSellerAnalytics</code></td>
+<td>Render helper for the seller analytics section.</td>
+</tr>
+<tr>
+<td style="text-align: right;">425</td>
+<td><code>function renderPowerBI</code></td>
+<td>Render helper for the power bi section.</td>
+</tr>
+<tr>
+<td style="text-align: right;">618</td>
+<td><code>function renderPropertyTable</code></td>
+<td>Render helper for the property table section.</td>
+</tr>
+<tr>
+<td style="text-align: right;">680</td>
+<td><code>function renderDeedTable</code></td>
+<td>Renders buyer verification packets with document-open, approve, and reject actions.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagesanalyticspagetsx"><code>frontend/src/pages/AnalyticsPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 180</li>
+<li>Purpose: Market analytics dashboard with KPI cards, trends, locality scores, commercial zones, and heatmap chips.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">7</td>
+<td><code>function AnalyticsPage</code></td>
+<td>React component rendering the analytics page UI.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpageschatpagetsx"><code>frontend/src/pages/ChatPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 223</li>
+<li>Purpose: Property chat page using REST history and authenticated WebSocket messages.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">6</td>
+<td><code>type ChatMessage</code></td>
+<td>TypeScript type describing the shape of chat message data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">14</td>
+<td><code>function displayTime</code></td>
+<td>Function/helper implementing display time behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">19</td>
+<td><code>function ChatPage</code></td>
+<td>React component rendering the chat page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">32</td>
+<td><code>function scrollToBottom</code></td>
+<td>Function/helper implementing scroll to bottom behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">112</td>
+<td><code>function handleSend</code></td>
+<td>UI event handler for send actions.</td>
+</tr>
+<tr>
+<td style="text-align: right;">135</td>
+<td><code>function labelFor</code></td>
+<td>Function/helper implementing label for behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagescomparepagetsx"><code>frontend/src/pages/ComparePage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 122</li>
+<li>Purpose: Side-by-side compare page for up to three stored property cards.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">20</td>
+<td><code>function ComparePage</code></td>
+<td>React component rendering the compare page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">24</td>
+<td><code>function getBest</code></td>
+<td>Retrieves or derives get best for this module.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagesdeedpagetsx"><code>frontend/src/pages/DeedPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 337</li>
+<li>Purpose: Legal workflow page for upload, status/timeline, stamp-duty calculation, and RERA check.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">6</td>
+<td><code>function DeedPage</code></td>
+<td>React component rendering the deed page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">22</td>
+<td><code>function checkStatus</code></td>
+<td>Function/helper implementing check status behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">32</td>
+<td><code>function calcStamp</code></td>
+<td>Function/helper implementing calc stamp behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">37</td>
+<td><code>function checkRera</code></td>
+<td>Function/helper implementing check rera behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpageslandingpagetsx"><code>frontend/src/pages/LandingPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 229</li>
+<li>Purpose: Home page with hero search, stats, feature cards, featured listings, top localities, and PropBot CTA.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">17</td>
+<td><code>function LandingPage</code></td>
+<td>React component rendering the landing page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">35</td>
+<td><code>function handleSearch</code></td>
+<td>UI event handler for search actions.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagesloginpagetsx"><code>frontend/src/pages/LoginPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 95</li>
+<li>Purpose: Login/register form with role selection, auth persistence, and role-based redirects.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">6</td>
+<td><code>function LoginPage</code></td>
+<td>React component rendering the login page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">24</td>
+<td><code>function switchMode</code></td>
+<td>Function/helper implementing switch mode behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">30</td>
+<td><code>function submit</code></td>
+<td>Function/helper implementing submit behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagesmappagetsx"><code>frontend/src/pages/MapPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 144</li>
+<li>Purpose: Leaflet map page over backend GeoJSON with price pins and filters.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">14</td>
+<td><code>function createPriceIcon</code></td>
+<td>Creates price icon data, UI, or files for this workflow.</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td><code>interface GeoFeature</code></td>
+<td>TypeScript interface describing the shape of geo feature data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">25</td>
+<td><code>function MapController</code></td>
+<td>Function/helper implementing map controller behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">31</td>
+<td><code>function MapPage</code></td>
+<td>React component rendering the map page UI.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagespredictpagetsx"><code>frontend/src/pages/PredictPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 280</li>
+<li>Purpose: Tabbed AI prediction page for price, commercial score, and appreciation forecast.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">7</td>
+<td><code>type Tab</code></td>
+<td>TypeScript type describing the shape of tab data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td><code>function PredictPage</code></td>
+<td>React component rendering the predict page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">27</td>
+<td><code>function runPricePredict</code></td>
+<td>Runs the price predict workflow and stores the result.</td>
+</tr>
+<tr>
+<td style="text-align: right;">33</td>
+<td><code>function runCommercial</code></td>
+<td>Runs the commercial workflow and stores the result.</td>
+</tr>
+<tr>
+<td style="text-align: right;">39</td>
+<td><code>function runAppreciation</code></td>
+<td>Runs the appreciation workflow and stores the result.</td>
+</tr>
+<tr>
+<td style="text-align: right;">45</td>
+<td><code>function scoreColor</code></td>
+<td>Function/helper implementing score color behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagespropertiespagetsx"><code>frontend/src/pages/PropertiesPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 192</li>
+<li>Purpose: Filterable property listing page with grid/list mode and PropBot filter listener.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">8</td>
+<td><code>function PropertiesPage</code></td>
+<td>React component rendering the properties page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">28</td>
+<td><code>function fetchProperties</code></td>
+<td>Builds query params from filters, calls the listing API, and updates loading/list/total state.</td>
+</tr>
+<tr>
+<td style="text-align: right;">57</td>
+<td><code>function handler</code></td>
+<td>UI event handler for r actions.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagespropertydetailpagetsx"><code>frontend/src/pages/PropertyDetailPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 263</li>
+<li>Purpose: Property detail page with gallery, valuation, EMI estimate, nearby places, price chart, and seller chat.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">6</td>
+<td><code>function PropertyDetailPage</code></td>
+<td>React component rendering the property detail page UI.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcpagessellerpagetsx"><code>frontend/src/pages/SellerPage.tsx</code></h3>
+<ul>
+<li>Layer: Frontend Pages</li>
+<li>Lines: 284</li>
+<li>Purpose: Seller dashboard for owned listings, inquiries, mock views/leads, trends, and listing actions.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">26</td>
+<td><code>function SellerPage</code></td>
+<td>React component rendering the seller page UI.</td>
+</tr>
+<tr>
+<td style="text-align: right;">41</td>
+<td><code>function fetchDashboardListings</code></td>
+<td>Function/helper implementing fetch dashboard listings behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">58</td>
+<td><code>function handleEdit</code></td>
+<td>UI event handler for edit actions.</td>
+</tr>
+<tr>
+<td style="text-align: right;">63</td>
+<td><code>function handleDelete</code></td>
+<td>UI event handler for delete actions.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcstoreusestorets"><code>frontend/src/store/useStore.ts</code></h3>
+<ul>
+<li>Layer: Frontend State</li>
+<li>Lines: 93</li>
+<li>Purpose: Zustand stores for property list/compare state and persisted auth state.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">2</td>
+<td><code>interface Property</code></td>
+<td>TypeScript interface describing the shape of property data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td><code>interface Filters</code></td>
+<td>TypeScript interface describing the shape of filters data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">29</td>
+<td><code>interface PropertyStore</code></td>
+<td>TypeScript interface describing the shape of property store data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">37</td>
+<td><code>object method setProperties</code></td>
+<td>Function/helper implementing set properties behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">38</td>
+<td><code>object method setLoading</code></td>
+<td>Function/helper implementing set loading behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">39</td>
+<td><code>object method setFilters</code></td>
+<td>Function/helper implementing set filters behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">40</td>
+<td><code>object method setPage</code></td>
+<td>Function/helper implementing set page behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">41</td>
+<td><code>object method addToCompare</code></td>
+<td>Function/helper implementing add to compare behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">42</td>
+<td><code>object method removeFromCompare</code></td>
+<td>Function/helper implementing remove from compare behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">43</td>
+<td><code>object method clearCompare</code></td>
+<td>Function/helper implementing clear compare behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">53</td>
+<td><code>object method setProperties</code></td>
+<td>Function/helper implementing set properties behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">55</td>
+<td><code>object method setLoading</code></td>
+<td>Function/helper implementing set loading behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">56</td>
+<td><code>object method setFilters</code></td>
+<td>Function/helper implementing set filters behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">57</td>
+<td><code>object method setPage</code></td>
+<td>Function/helper implementing set page behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">58</td>
+<td><code>object method addToCompare</code></td>
+<td>Function/helper implementing add to compare behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">66</td>
+<td><code>object method removeFromCompare</code></td>
+<td>Function/helper implementing remove from compare behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">67</td>
+<td><code>object method clearCompare</code></td>
+<td>Function/helper implementing clear compare behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">69</td>
+<td><code>interface AuthStore</code></td>
+<td>TypeScript interface describing the shape of auth store data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">73</td>
+<td><code>object method setAuth</code></td>
+<td>Function/helper implementing set auth behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">74</td>
+<td><code>object method logout</code></td>
+<td>Function/helper implementing logout behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">79</td>
+<td><code>object method user</code></td>
+<td>Function/helper implementing user behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">82</td>
+<td><code>object method setAuth</code></td>
+<td>Function/helper implementing set auth behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">87</td>
+<td><code>object method logout</code></td>
+<td>Function/helper implementing logout behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcthemets"><code>frontend/src/theme.ts</code></h3>
+<ul>
+<li>Layer: Frontend App Shell</li>
+<li>Lines: 23</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">21</td>
+<td><code>type ColorKey</code></td>
+<td>TypeScript type describing the shape of color key data in this module.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcutilsapits"><code>frontend/src/utils/api.ts</code></h3>
+<ul>
+<li>Layer: Frontend Utilities</li>
+<li>Lines: 496</li>
+<li>Purpose: Axios client plus real/mock API wrappers for properties, chat, prediction, agents, analytics, deeds, auth, formatting, and images.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">14</td>
+<td><code>function delay</code></td>
+<td>Function/helper implementing delay behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">15</td>
+<td><code>function mock</code></td>
+<td>Function/helper implementing mock behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">46</td>
+<td><code>object method list</code></td>
+<td>API wrapper that lists/searches records for this service group.</td>
+</tr>
+<tr>
+<td style="text-align: right;">63</td>
+<td><code>object method get</code></td>
+<td>API wrapper that fetches one record by ID.</td>
+</tr>
+<tr>
+<td style="text-align: right;">68</td>
+<td><code>object method geojson</code></td>
+<td>API wrapper that fetches map-ready GeoJSON.</td>
+</tr>
+<tr>
+<td style="text-align: right;">73</td>
+<td><code>object method nearby</code></td>
+<td>API wrapper that fetches nearby places.</td>
+</tr>
+<tr>
+<td style="text-align: right;">81</td>
+<td><code>object method priceHistory</code></td>
+<td>API wrapper that fetches price-history data.</td>
+</tr>
+<tr>
+<td style="text-align: right;">89</td>
+<td><code>object method create</code></td>
+<td>API wrapper that creates a new record.</td>
+</tr>
+<tr>
+<td style="text-align: right;">94</td>
+<td><code>object method update</code></td>
+<td>API wrapper that updates a record.</td>
+</tr>
+<tr>
+<td style="text-align: right;">99</td>
+<td><code>object method patch</code></td>
+<td>API wrapper that partially updates a record.</td>
+</tr>
+<tr>
+<td style="text-align: right;">104</td>
+<td><code>object method delete</code></td>
+<td>API wrapper that deletes a record.</td>
+</tr>
+<tr>
+<td style="text-align: right;">113</td>
+<td><code>object method startPropertyChat</code></td>
+<td>Function/helper implementing start property chat behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">117</td>
+<td><code>object method history</code></td>
+<td>Function/helper implementing history behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">122</td>
+<td><code>object method sellerActive</code></td>
+<td>Function/helper implementing seller active behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">131</td>
+<td><code>object method landPrice</code></td>
+<td>Function/helper implementing land price behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">135</td>
+<td><code>object method appreciation</code></td>
+<td>Function/helper implementing appreciation behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">140</td>
+<td><code>object method commercialScore</code></td>
+<td>Function/helper implementing commercial score behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">145</td>
+<td><code>object method anomaly</code></td>
+<td>Function/helper implementing anomaly behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">150</td>
+<td><code>object method localityInsights</code></td>
+<td>Function/helper implementing locality insights behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">159</td>
+<td><code>object method chat</code></td>
+<td>API wrapper for PropBot chat.</td>
+</tr>
+<tr>
+<td style="text-align: right;">166</td>
+<td><code>object method search</code></td>
+<td>Function/helper implementing search behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">177</td>
+<td><code>object method docQuery</code></td>
+<td>Function/helper implementing doc query behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">182</td>
+<td><code>object method voice</code></td>
+<td>API wrapper for PropBot text-to-speech audio.</td>
+</tr>
+<tr>
+<td style="text-align: right;">193</td>
+<td><code>object method marketTrends</code></td>
+<td>Function/helper implementing market trends behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">197</td>
+<td><code>object method heatmap</code></td>
+<td>Function/helper implementing heatmap behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">202</td>
+<td><code>object method topLocalities</code></td>
+<td>Function/helper implementing top localities behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">207</td>
+<td><code>object method commercialZones</code></td>
+<td>Function/helper implementing commercial zones behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">212</td>
+<td><code>object method demandForecast</code></td>
+<td>Function/helper implementing demand forecast behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">221</td>
+<td><code>object method adminSellerOps</code></td>
+<td>Function/helper implementing admin seller ops behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">268</td>
+<td><code>object method powerBIDataset</code></td>
+<td>Function/helper implementing power bidataset behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">323</td>
+<td><code>object method upload</code></td>
+<td>API wrapper for deed document upload.</td>
+</tr>
+<tr>
+<td style="text-align: right;">347</td>
+<td><code>object method status</code></td>
+<td>API wrapper for deed status.</td>
+</tr>
+<tr>
+<td style="text-align: right;">352</td>
+<td><code>object method verify</code></td>
+<td>API wrapper to trigger deed verification.</td>
+</tr>
+<tr>
+<td style="text-align: right;">357</td>
+<td><code>object method timeline</code></td>
+<td>API wrapper for legal timeline.</td>
+</tr>
+<tr>
+<td style="text-align: right;">362</td>
+<td><code>object method stampDuty</code></td>
+<td>API wrapper for stamp-duty calculation.</td>
+</tr>
+<tr>
+<td style="text-align: right;">367</td>
+<td><code>object method rera</code></td>
+<td>API wrapper for RERA lookup.</td>
+</tr>
+<tr>
+<td style="text-align: right;">372</td>
+<td><code>object method adminSummary</code></td>
+<td>Function/helper implementing admin summary behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">387</td>
+<td><code>object method adminVerifications</code></td>
+<td>Function/helper implementing admin verifications behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">411</td>
+<td><code>object method updateVerification</code></td>
+<td>Function/helper implementing update verification behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">416</td>
+<td><code>object method documentBlob</code></td>
+<td>Function/helper implementing document blob behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">424</td>
+<td><code>type AuthPayload</code></td>
+<td>TypeScript type describing the shape of auth payload data in this module.</td>
+</tr>
+<tr>
+<td style="text-align: right;">429</td>
+<td><code>function mockAuthResponse</code></td>
+<td>Function/helper implementing mock auth response behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">444</td>
+<td><code>object method login</code></td>
+<td>API wrapper for role-aware login.</td>
+</tr>
+<tr>
+<td style="text-align: right;">451</td>
+<td><code>object method register</code></td>
+<td>API wrapper for buyer/seller registration.</td>
+</tr>
+<tr>
+<td style="text-align: right;">465</td>
+<td><code>function formatINR</code></td>
+<td>Function/helper implementing format inr behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcutilsmockdatats"><code>frontend/src/utils/mockData.ts</code></h3>
+<ul>
+<li>Layer: Frontend Utilities</li>
+<li>Lines: 252</li>
+<li>Purpose: Mock data generators used when VITE_USE_MOCK is enabled.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Line</th>
+<th>Symbol</th>
+<th>What It Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">35</td>
+<td><code>function MOCK_PROPERTY_DETAIL</code></td>
+<td>Function/helper implementing mock property detail behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">71</td>
+<td><code>function genTrend</code></td>
+<td>Function/helper implementing gen trend behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">127</td>
+<td><code>function MOCK_PRICE_PREDICTION</code></td>
+<td>Function/helper implementing mock price prediction behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">137</td>
+<td><code>function MOCK_COMMERCIAL_SCORE</code></td>
+<td>Function/helper implementing mock commercial score behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">144</td>
+<td><code>function MOCK_APPRECIATION</code></td>
+<td>Function/helper implementing mock appreciation behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">175</td>
+<td><code>function MOCK_AGENT_CHAT</code></td>
+<td>Function/helper implementing mock agent chat behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">203</td>
+<td><code>function MOCK_DEED_STATUS</code></td>
+<td>Function/helper implementing mock deed status behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">212</td>
+<td><code>function MOCK_DEED_TIMELINE</code></td>
+<td>Function/helper implementing mock deed timeline behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">220</td>
+<td><code>function MOCK_STAMP_DUTY</code></td>
+<td>Function/helper implementing mock stamp duty behavior in this file.</td>
+</tr>
+<tr>
+<td style="text-align: right;">238</td>
+<td><code>function MOCK_RERA</code></td>
+<td>Function/helper implementing mock rera behavior in this file.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="frontendsrcvite-envdts"><code>frontend/src/vite-env.d.ts</code></h3>
+<ul>
+<li>Layer: Frontend App Shell</li>
+<li>Lines: 2</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="frontendtsconfigjson"><code>frontend/tsconfig.json</code></h3>
+<ul>
+<li>Layer: Frontend Support</li>
+<li>Lines: 24</li>
+<li>Purpose: TypeScript compiler configuration.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="frontendtsconfignodejson"><code>frontend/tsconfig.node.json</code></h3>
+<ul>
+<li>Layer: Frontend Support</li>
+<li>Lines: 2</li>
+<li>Purpose: TypeScript compiler configuration.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="frontendviteconfigts"><code>frontend/vite.config.ts</code></h3>
+<ul>
+<li>Layer: Frontend Support</li>
+<li>Lines: 23</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="powerbi-exportpropiq-powerbi-datasetjson"><code>powerbi-export/propiq-powerbi-dataset.json</code></h3>
+<ul>
+<li>Layer: BI Exports</li>
+<li>Lines: 259</li>
+<li>Purpose: JSON configuration or structured data file.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h3 id="test_apipy"><code>test_api.py</code></h3>
+<ul>
+<li>Layer: Repository Root</li>
+<li>Lines: 27</li>
+<li>Purpose: Source/configuration file used by this layer.</li>
+<li>Functions/classes: none extracted. This is configuration, styles, static documentation, package metadata, package marker content, or structured data.</li>
+</ul>
+<h2 id="5-data-model-and-bi-assets">5. Data, Model, And BI Assets</h2>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/ml/models/*.pkl</code></td>
+<td>Serialized trained/fallback ML artifacts for price prediction, commercial scoring, anomaly detection, and price history.</td>
+</tr>
+<tr>
+<td><code>backend/ml/models/training_data.csv</code></td>
+<td>Synthetic training data emitted by the ML training script.</td>
+</tr>
+<tr>
+<td><code>backend/data/sample_properties.json</code></td>
+<td>Large generated property catalog used by backend fallback/demo loading.</td>
+</tr>
+<tr>
+<td><code>data/datasets/properties/*.csv</code></td>
+<td>Raw/generated property datasets, including Hyderabad and multi-city sources.</td>
+</tr>
+<tr>
+<td><code>data/datasets/price_history/nhb_residex_quarterly.xlsx</code></td>
+<td>NHB RESIDEX quarterly price index source.</td>
+</tr>
+<tr>
+<td><code>data/legal_docs/**/*.pdf</code></td>
+<td>RERA, building rules, title, registration, stamp, and transfer law documents for legal context/RAG.</td>
+</tr>
+<tr>
+<td><code>data/legal_docs/deeds/telangana_sale_deed_template.txt</code></td>
+<td>Template/legal text used by deed workflows.</td>
+</tr>
+<tr>
+<td><code>data/images/property_photos/*</code></td>
+<td>Property photos served through backend static image mount or referenced in data.</td>
+</tr>
+<tr>
+<td><code>data/images/thumbnails/*</code></td>
+<td>Generated thumbnails for property photos.</td>
+</tr>
+<tr>
+<td><code>data/images/images_manifest.json</code></td>
+<td>Image metadata manifest.</td>
+</tr>
+<tr>
+<td><code>powerbi-export/*</code></td>
+<td>Power BI CSV, dataset JSON, PBIDS, and workbook exports for admin analytics.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-deployment-and-environment-notes">6. Deployment And Environment Notes</h2>
+<ul>
+<li>Local development can run backend/frontend separately or use Docker Compose.</li>
+<li>The production-style Dockerfile builds React first, then serves frontend static files and FastAPI through a single Nginx/Python image.</li>
+<li>GitHub Actions currently runs backend tests and builds/pushes the Docker image to Azure Container Registry on <code>main</code>.</li>
+<li>Environment variables control SQL/Mongo/Redis, Azure OpenAI, Blob Storage, Document Intelligence, Cognitive Search, Google Places, ElevenLabs, JWT, and Application Insights.</li>
+<li>Secret files are intentionally redacted in this report. Keep actual keys in environment variables or Azure Key Vault.</li>
+</ul>
+<h2 id="7-testing-summary">7. Testing Summary</h2>
+<ul>
+<li><code>backend/tests/test_api.py</code> is the main automated suite using <code>httpx.AsyncClient</code> with ASGI transport.</li>
+<li>It covers health, auth, registration role rules, properties, ML endpoints, stamp duty, RERA manual verification behavior, analytics, GeoJSON, and PropBot behavior.</li>
+<li><code>backend/test_integration.py</code>, <code>backend/test_azure_sql.py</code>, and root <code>test_api.py</code> are manual smoke/diagnostic scripts against running services.</li>
+</ul>
+<h2 id="8-fast-reading-order">8. Fast Reading Order</h2>
+<ol>
+<li><code>frontend/src/App.tsx</code> for user routes.</li>
+<li><code>frontend/src/utils/api.ts</code> for frontend-to-backend mapping.</li>
+<li>Matching files in <code>backend/app/routers/</code> for API contracts.</li>
+<li><code>backend/app/services/</code> for business logic and fallback behavior.</li>
+<li><code>backend/app/db/models.py</code>, <code>backend/app/models/*</code>, and <code>backend/app/schemas/*</code> for data shapes.</li>
+<li><code>backend/tests/test_api.py</code> for executable examples of expected behavior.</li>
+</ol></body></html>

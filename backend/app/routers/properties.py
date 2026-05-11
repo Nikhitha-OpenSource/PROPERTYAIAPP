@@ -157,23 +157,28 @@ async def list_properties_endpoint(
     db_dicts = [_property_to_dict(p) for p in db_items]
 
     # 2. Query fallback CSV data
-    csv_result = csv_list_properties(
-        city=city,
-        locality=locality,
-        bhk=bhk,
-        listing_type=property_type or listing_type,
-        min_price=min_price,
-        max_price=max_price,
-        furnishing=None,
-        verified_only=verified_only,
-        min_area=min_area,
-        max_area=max_area,
-        owner_user_id=owner_user_id,
-        page=page,
-        page_size=page_size,
-    )
-    csv_dicts = csv_result.get("items", [])
-    csv_total = csv_result.get("total", 0)
+    csv_dicts = []
+    csv_total = 0
+    try:
+        csv_result = csv_list_properties(
+            city=city,
+            locality=locality,
+            bhk=bhk,
+            listing_type=property_type or listing_type,
+            min_price=min_price,
+            max_price=max_price,
+            furnishing=None,
+            verified_only=verified_only,
+            min_area=min_area,
+            max_area=max_area,
+            owner_user_id=owner_user_id,
+            page=page,
+            page_size=page_size,
+        )
+        csv_dicts = csv_result.get("items", [])
+        csv_total = csv_result.get("total", 0)
+    except Exception:
+        pass
 
     # 3. Merge seamlessly, ensuring no duplicate properties
     seen_ids = set()
@@ -205,14 +210,17 @@ async def get_property_endpoint(property_id: str, db: Session = Depends(get_db))
     if p:
         return _property_to_dict(p)
         
-    prop = csv_get_property(property_id)
-    if prop:
-        return prop
-        
-    # Safe fallback if a random/deleted ID is requested to prevent UI crashes
-    result = csv_list_properties(page=1, page_size=1)
-    items = result.get("items", [])
-    return items[0] if items else {"error": "No properties found"}
+    try:
+        prop = csv_get_property(property_id)
+        if prop:
+            return prop
+            
+        # Safe fallback if a random/deleted ID is requested to prevent UI crashes
+        result = csv_list_properties(page=1, page_size=1)
+        items = result.get("items", [])
+        return items[0] if items else {"error": "No properties found"}
+    except Exception:
+        return {"error": "Property not found"}
 
 
 @router.get("/{property_id}/nearby")

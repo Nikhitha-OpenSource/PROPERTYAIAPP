@@ -67,4 +67,21 @@ jobs:
           docker push ${{ env.APP_IMAGE }}:${{ github.sha }}
           docker push ${{ env.APP_IMAGE }}:latest
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          containerAppName: propiq-app
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+          imageToDeploy: ${{ env.APP_IMAGE }}:${{ github.sha }}
+          targetPort: 80
+          environmentVariables: >
+            AZURE_OPENAI_KEY=secretref:azure-openai-key
+            JWT_SECRET=secretref:jwt-secret
+            DATABASE_URL=secretref:database-url
+            MONGO_URI=secretref:mongo-uri
  
