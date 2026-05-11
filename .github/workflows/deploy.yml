@@ -66,3 +66,5 @@ jobs:
           docker tag ${{ env.APP_IMAGE }}:${{ github.sha }} ${{ env.APP_IMAGE }}:latest
           docker push ${{ env.APP_IMAGE }}:${{ github.sha }}
           docker push ${{ env.APP_IMAGE }}:latest
+
+ 
