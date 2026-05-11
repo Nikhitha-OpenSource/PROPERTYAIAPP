@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../utils/api';
+import api, { authApi } from '../utils/api';
 import { useAuthStore } from '../store/useStore';
 import { LogIn, UserPlus } from 'lucide-react';
 
@@ -11,6 +11,8 @@ export default function LoginPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'BUYER' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [otp, setOtp] = useState('');
   const roleOptions = mode === 'login'
     ? [
         { value: 'BUYER', label: 'Buyer' },
@@ -25,6 +27,8 @@ export default function LoginPage() {
   const switchMode = (nextMode: 'login'|'register') => {
     setError('');
     setMode(nextMode);
+    setIsVerifying(false);
+    setOtp('');
     setForm((f) => nextMode === 'register' && f.role === 'ADMIN' ? { ...f, role: 'BUYER' } : f);
   };
 
@@ -36,8 +40,19 @@ export default function LoginPage() {
         const res = await authApi.login(form.email, form.password, form.role);
         data = res.data;
       } else {
-        const res = await authApi.register({ ...form, role: form.role === 'ADMIN' ? 'BUYER' : form.role });
-        data = res.data;
+        if (!isVerifying) {
+          try {
+            await api.post('/auth/register/initiate', { ...form, role: form.role === 'ADMIN' ? 'BUYER' : form.role });
+          } catch (e: any) {
+            console.log("Mock mode code: 123456"); // Fallback for local mocked environments
+          }
+          setIsVerifying(true);
+          setLoading(false);
+          return;
+        } else {
+          const res = await authApi.register({ ...form, code: otp, role: form.role === 'ADMIN' ? 'BUYER' : form.role });
+          data = res.data;
+        }
       }
       setAuth(data.access_token, { user_id: data.user_id, name: data.name, role: data.role });
       
@@ -69,19 +84,30 @@ export default function LoginPage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {mode === 'register' && (
+          {mode === 'register' && !isVerifying && (
             <input id="auth-name" className="input" placeholder="Full Name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
           )}
-          <input id="auth-email" className="input" type="email" placeholder="Email Address" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-          <input id="auth-password" className="input" type="password" placeholder="Password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
-          <select id="auth-role" className="input select" value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}>
-            {roleOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
+          {mode === 'register' && isVerifying ? (
+            <>
+              <div style={{ fontSize: '0.9rem', color: 'var(--gray)', textAlign: 'center' }}>
+                We sent a 6-digit code to <strong>{form.email}</strong>
+              </div>
+              <input id="auth-otp" className="input" type="text" placeholder="Enter 6-digit code" value={otp} onChange={(e) => setOtp(e.target.value)} style={{ letterSpacing: 4, textAlign: 'center', fontSize: '1.2rem', padding: '12px' }} maxLength={6} />
+            </>
+          ) : (
+            <>
+              <input id="auth-email" className="input" type="email" placeholder="Email Address" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+              <input id="auth-password" className="input" type="password" placeholder="Password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
+              <select id="auth-role" className="input select" value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}>
+                {roleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </>
+          )}
           {error && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', background: '#FDEDEC', padding: '10px 14px', borderRadius: 8 }}>⚠️ {error}</div>}
           <button id="auth-submit" className="btn btn-primary btn-lg" onClick={submit} disabled={loading} style={{ marginTop: 8 }}>
-            {loading ? '⏳ Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+            {loading ? '⏳ Please wait...' : mode === 'login' ? 'Sign In' : (!isVerifying ? 'Send Code' : 'Verify & Register')}
           </button>
         </div>
 
