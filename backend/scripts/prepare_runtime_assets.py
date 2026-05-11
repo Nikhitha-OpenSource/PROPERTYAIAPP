@@ -1,17 +1,19 @@
 """Create small runtime assets for the Docker image.
 
 The full local data folder is intentionally not committed. This script gives the
-container a self-contained sample catalogue, property photos, and legal docs so
+container a self-contained 1004-property catalogue, property photos, and legal docs so
 the deployed demo keeps working from a clean Git checkout.
 """
 from __future__ import annotations
 
 import csv
+import os
 from pathlib import Path
 
 
-APP_ROOT = Path("/app")
+APP_ROOT = Path(os.getenv("PROPIQ_ASSET_ROOT", "/app"))
 DATA_DIR = APP_ROOT / "data"
+PROPERTY_COUNT = 1004
 
 
 def create_property_images() -> None:
@@ -98,7 +100,7 @@ def create_property_csv() -> None:
     with csv_path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
-        for idx in range(1, 121):
+        for idx in range(1, PROPERTY_COUNT + 1):
             locality, lat, lng, ppsf = localities[(idx - 1) % len(localities)]
             bhk = (idx % 4) + 1
             area = 760 + (idx % 18) * 95

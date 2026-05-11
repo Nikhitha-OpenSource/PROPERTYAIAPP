@@ -33,6 +33,22 @@ export const MOCK_PROPERTIES: any[] = [
   mkProp({ property_id:'prop-020', title:'Commercial Plot in Kompally', locality:'Kompally', city:'Hyderabad', listing_type:'COMMERCIAL', land_use_zone:'COMMERCIAL', bhk:0, bathrooms:0, floor:0, total_floors:0, area_sqft:3600, price:28500000, price_per_sqft:7917, furnishing:'UNFURNISHED', parking:'NONE', age_years:0, amenity_count:3, verified:true, latitude:17.5433, longitude:78.4788, description:'Road-facing commercial plot in Kompally, suitable for showroom, clinic, retail outlet, or mixed-use development.', images:[] }),
 ];
 
+// Ensure there are exactly 1004 mock properties to be seen in the app
+const generateExtendedMockProperties = () => {
+  const extended = [...MOCK_PROPERTIES];
+  for (let i = MOCK_PROPERTIES.length + 1; i <= 1004; i++) {
+    const template = MOCK_PROPERTIES[i % MOCK_PROPERTIES.length];
+    extended.push({
+      ...template,
+      property_id: `prop-${i.toString().padStart(3, '0')}`,
+      title: `${template.bhk > 0 ? template.bhk + ' BHK' : 'Plot'} in ${template.locality} (${i})`
+    });
+  }
+  return extended;
+};
+export const EXTENDED_MOCK_PROPERTIES = generateExtendedMockProperties();
+MOCK_PROPERTIES.splice(0, MOCK_PROPERTIES.length, ...EXTENDED_MOCK_PROPERTIES);
+
 export const MOCK_PROPERTY_DETAIL = (id: string) => {
   const base = MOCK_PROPERTIES.find(p => p.property_id === id) || MOCK_PROPERTIES[0];
   return {

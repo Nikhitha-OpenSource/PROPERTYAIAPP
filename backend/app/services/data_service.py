@@ -119,29 +119,29 @@ HYD_DEFAULT = (17.3850, 78.4867)
 PROPERTY_IMAGES_BY_TYPE = {
     "RESIDENTIAL": [
         "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
         "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1494527891032-2a1fef3502ee?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1472220625704-91e1462799b2?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1600607687931-cebfad2114ce?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1600585154526-990dced4ea0d?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1512915922686-57c11dde9b6b?auto=format&fit=crop&w=1200&q=80",
     ],
     "COMMERCIAL": [
-        "https://images.unsplash.com/photo-1530590746450-9f886ccdeb26?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1556740714-a8395b3bf30f?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1416949929422-a1d9c25c64a5?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1431540015161-0bf868a2d407?auto=format&fit=crop&w=1200&q=80",
         "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1460925895917-afdab827c52e?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1494526455230-e9e35be3d9b0?auto=format&fit=crop&w=1200&q=80",
     ],
     "LAND": [
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1494527585175-80f7d5a06f22?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1473642962366-8d2330dbb23f?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1629196914213-9aa68bb6e82a?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1605810755913-c97693998f82?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1584984241065-f98297b81966?auto=format&fit=crop&w=1200&q=80",
     ],
 }
 
@@ -526,6 +526,8 @@ def _load_data():
         json_candidates = [
             _BACKEND_DATA_DIR / "sample_properties.json",
             _DATA_DIR / "sample_properties.json",
+            Path("/app/data/sample_properties.json"),
+            Path("/app/backend/data/sample_properties.json"),
         ]
         json_path = next((path for path in json_candidates if path.exists()), None)
         if json_path:
@@ -550,6 +552,9 @@ def _load_data():
                 _DATA_DIR / "datasets" / "properties" / "hyderabad_scraped.csv",
                 _DATA_DIR / "datasets" / "properties" / "hyderabad_house_prices.csv",
                 Path(CSV_FALLBACK),
+                Path("/app/data/datasets/properties/hyderabad_house_prices.csv"),
+                Path("/app/data/datasets/properties/hyderabad_scraped.csv"),
+                Path("/backend/data/datasets/properties/hyderabad_house_prices.csv"),
             ]
             df = None
             for p in candidates:
@@ -607,167 +612,4 @@ def _build_fallback() -> List[Dict[str, Any]]:
             "latitude": lat,
             "longitude": lng,
             "status": "ACTIVE",
-            "verified": bool(i % 3 != 0),
-            "is_resale": bool(i % 2 == 0),
-            "furnishing": "SEMI_FURNISHED",
-            "amenities": ["Gym", "Swimming Pool", "24x7 Security", "Power Backup"],
-            "has_parking": True,
-            "has_gym": True,
-            "has_pool": bool(i % 3 == 0),
-            "floor": i % 12 + 1,
-            "total_floors": 15,
-            "age_years": i % 10,
-            "parking": "1 covered",
-            "image_urls": _pick_images(prop_id, "RESIDENTIAL"),
-            "created_at": "2025-01-15T00:00:00",
-        })
-    return props
-
-
-# ---------------------------------------------------------------------------
-# Public query API
-# ---------------------------------------------------------------------------
-
-def get_properties(
-    locality: Optional[str] = None,
-    city: Optional[str] = None,
-    min_price: Optional[int] = None,
-    max_price: Optional[int] = None,
-    min_area: Optional[int] = None,
-    max_area: Optional[int] = None,
-    bhk: Optional[int] = None,
-    listing_type: Optional[str] = None,
-    furnishing: Optional[str] = None,
-    owner_user_id: Optional[str] = None,
-    seller_id: Optional[str] = None,
-    verified_only: bool = False,
-    page: int = 1,
-    page_size: int = 20,
-) -> Dict[str, Any]:
-    _load_data()
-    items = _PROPERTIES
-
-    if locality:
-        items = [p for p in items if locality.lower() in p["locality"].lower()]
-    if min_price is not None:
-        items = [p for p in items if p["price"] >= min_price]
-    if max_price is not None:
-        items = [p for p in items if p["price"] <= max_price]
-    if min_area is not None:
-        items = [p for p in items if p["area_sqft"] >= min_area]
-    if max_area is not None:
-        items = [p for p in items if p["area_sqft"] <= max_area]
-    if bhk is not None:
-        items = [p for p in items if p["bhk"] == bhk]
-    if listing_type:
-        items = [p for p in items if p["listing_type"].lower() == listing_type.lower()]
-    if furnishing:
-        items = [p for p in items if p["furnishing"].lower() == furnishing.lower()]
-    seller_filter = owner_user_id or seller_id
-    if seller_filter:
-        items = [
-            p for p in items
-            if str(p.get("owner_user_id") or p.get("seller_id") or "") == str(seller_filter)
-        ]
-    if verified_only:
-        items = [p for p in items if p["verified"]]
-
-    total = len(items)
-    start = (page - 1) * page_size
-    page_items = items[start: start + page_size]
-    return {"total": total, "page": page, "page_size": page_size, "items": page_items}
-
-
-def get_property_by_id(property_id: str) -> Optional[Dict[str, Any]]:
-    _load_data()
-    for p in _PROPERTIES:
-        if p["property_id"] == property_id:
-            return p
-    return None
-
-
-# Compatibility aliases used by router modules
-get_property = get_property_by_id
-list_properties = get_properties
-
-
-def get_localities() -> List[str]:
-    _load_data()
-    seen = set()
-    result = []
-    for p in _PROPERTIES:
-        loc = p["locality"]
-        if loc not in seen:
-            seen.add(loc)
-            result.append(loc)
-    return sorted(result)
-
-
-def get_geojson(city: Optional[str] = None) -> Dict[str, Any]:
-    """Return all Hyderabad properties as GeoJSON FeatureCollection.
-    The city param is accepted but ignored — we're Hyderabad-only.
-    """
-    _load_data()
-    features = [
-        {
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [p["longitude"], p["latitude"]],
-            },
-            "properties": {
-                "property_id": p["property_id"],
-                "title": p["title"],
-                "price": p["price"],
-                "bhk": p["bhk"],
-                "area_sqft": p["area_sqft"],
-                "locality": p["locality"],
-                "verified": p["verified"],
-                "type": p["listing_type"],
-                "image": p["image_urls"][0] if p["image_urls"] else "",
-                "price_per_sqft": p["price_per_sqft"],
-                "furnishing": p["furnishing"],
-            },
-        }
-        for p in _PROPERTIES
-    ]
-    return {"type": "FeatureCollection", "features": features}
-
-
-def get_analytics() -> Dict[str, Any]:
-    """Compute real analytics from the loaded Hyderabad dataset."""
-    _load_data()
-    if not _PROPERTIES:
-        return {}
-
-    prices = [p["price"] for p in _PROPERTIES]
-    areas = [p["area_sqft"] for p in _PROPERTIES]
-    ppsf = [p["price_per_sqft"] for p in _PROPERTIES]
-
-    # Per-locality stats
-    locality_map: Dict[str, List] = {}
-    for p in _PROPERTIES:
-        loc = p["locality"]
-        locality_map.setdefault(loc, []).append(p["price"])
-
-    locality_stats = [
-        {
-            "locality": loc,
-            "avg_price": int(sum(vals) / len(vals)),
-            "count": len(vals),
-            "lat": LOCALITY_COORDS.get(loc, HYD_DEFAULT)[0],
-            "lng": LOCALITY_COORDS.get(loc, HYD_DEFAULT)[1],
-        }
-        for loc, vals in locality_map.items()
-    ]
-    locality_stats.sort(key=lambda x: x["avg_price"], reverse=True)
-
-    return {
-        "total_listings": len(_PROPERTIES),
-        "avg_price": int(sum(prices) / len(prices)),
-        "median_price": sorted(prices)[len(prices) // 2],
-        "avg_area": int(sum(areas) / len(areas)),
-        "avg_price_per_sqft": int(sum(ppsf) / len(ppsf)),
-        "top_localities": locality_stats[:15],
-        "city": "Hyderabad",
-    }
+            "verified": bo

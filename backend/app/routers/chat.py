@@ -323,6 +323,24 @@ async def get_chat_history(
         "requested_by": user.user_id,
     }
 
+    # Showcase: chat history for the injected sample properties
+    if not rows and "property-" in channel_id:
+        now = datetime.utcnow()
+        return {
+            "channel_id": channel_id,
+            "messages": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "channel_id": channel_id,
+                    "sender_id": "buyer-001",
+                    "sender_role": "BUYER",
+                    "message": "Hi, I am interested in this property. Is the price negotiable?" if channel_id.endswith("1") else "When can I schedule a visit?",
+                    "timestamp": now.isoformat()
+                }
+            ],
+            "requested_by": user.user_id,
+        }
+
 
 @router.post("/{channel_id}/alert")
 async def send_visit_alert(
