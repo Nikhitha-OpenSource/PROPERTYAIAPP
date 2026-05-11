@@ -637,3 +637,98 @@ def _build_fallback() -> List[Dict[str, Any]]:
             "created_at": "2025-01-15T00:00:00",
         })
     return props
+
+
+def list_properties(
+    city: Optional[str] = None,
+    locality: Optional[str] = None,
+    bhk: Optional[int] = None,
+    listing_type: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    furnishing: Optional[str] = None,
+    verified_only: bool = False,
+    min_area: Optional[float] = None,
+    max_area: Optional[float] = None,
+    owner_user_id: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 12,
+) -> dict:
+    """List properties with optional filtering."""
+    _load_data()
+    results = _PROPERTIES
+
+    if city:
+        results = [p for p in results if p.get("city", "").lower() == city.lower()]
+    if locality:
+        results = [p for p in results if p.get("locality", "").lower() == locality.lower()]
+    if bhk is not None:
+        results = [p for p in results if p.get("bhk") == bhk]
+    if listing_type:
+        results = [p for p in results if p.get("listing_type", "").upper() == listing_type.upper()]
+    if min_price is not None:
+        results = [p for p in results if p.get("price", 0) >= min_price]
+    if max_price is not None:
+        results = [p for p in results if p.get("price", 0) <= max_price]
+    if furnishing:
+        results = [p for p in results if p.get("furnishing", "").upper() == furnishing.upper()]
+    if verified_only:
+        results = [p for p in results if p.get("verified")]
+    if min_area is not None:
+        results = [p for p in results if p.get("area_sqft", 0) >= min_area]
+    if max_area is not None:
+        results = [p for p in results if p.get("area_sqft", 0) <= max_area]
+    if owner_user_id:
+        results = [p for p in results if str(p.get("owner_user_id")) == str(owner_user_id) or str(p.get("seller_id")) == str(owner_user_id)]
+
+    total = len(results)
+    start = (page - 1) * page_size
+    end = start + page_size
+    items = results[start:end]
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+    }
+
+
+def get_property(property_id: str) -> Optional[Dict[str, Any]]:
+    """Get a single property by ID."""
+    _load_data()
+    for p in _PROPERTIES:
+        if p.get("property_id") == property_id:
+            return p
+    return None
+
+
+def get_geojson(city: Optional[str] = "Hyderabad") -> dict:
+    """Return properties as GeoJSON FeatureCollection."""
+    _load_data()
+    features = []
+    for p in _PROPERTIES:
+        if city and p.get("city", "").lower() != city.lower():
+            continue
+        if p.get("latitude") is not None and p.get("longitude") is not None:
+            features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [p["longitude"], p["latitude"]]
+                },
+                "properties": {
+                    "id": p["property_id"],
+                    "title": p.get("title"),
+                    "price": p.get("price"),
+                    "bhk": p.get("bhk"),
+                    "area_sqft": p.get("area_sqft"),
+                    "locality": p.get("locality"),
+                    "verified": p.get("verified", False),
+                    "type": p.get("listing_type", "RESIDENTIAL"),
+                }
+            })
+    return {
+        "type": "FeatureCollection",
+        "features": features
+    }
