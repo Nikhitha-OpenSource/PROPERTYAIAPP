@@ -17,6 +17,7 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 _using_fallback_sqlite = False
+_db_initialized = False
 
 
 def _fallback_sqlite_url() -> str:
@@ -155,6 +156,7 @@ def _seed_demo_users() -> None:
 
 
 def init_db() -> None:
+    global _db_initialized
     from app.db.base import Base
     from app.db import models  # noqa: F401 (import registers models)
 
@@ -166,10 +168,17 @@ def init_db() -> None:
         _switch_to_fallback_sqlite(exc)
         Base.metadata.create_all(bind=engine)
     _seed_demo_users()
+    _db_initialized = True
+
+
+def ensure_db_ready() -> None:
+    if not _db_initialized:
+        init_db()
 
 
 @contextmanager
 def db_session() -> Iterator[Session]:
+    ensure_db_ready()
     _ensure_connection()
     db = SessionLocal()
     try:
@@ -184,6 +193,7 @@ def db_session() -> Iterator[Session]:
 
 def get_db() -> Iterator[Session]:
     # FastAPI dependency (generator)
+    ensure_db_ready()
     _ensure_connection()
     with db_session() as db:
         yield db

@@ -34,12 +34,9 @@ RUN pip install --no-cache-dir -r ./backend/requirements.txt && \
     find /usr/local/lib/python3.11 -name '*.pyc' -delete && \
     find /usr/local/lib/python3.11 -name '__pycache__' -delete
 
-# Copy backend code, required app data, and static frontend files
+# Copy backend code and static frontend files
 COPY backend/ ./backend/
-COPY data/datasets/properties/ ./data/datasets/properties/
-COPY data/images/ ./data/images/
-COPY data/legal_docs/ ./data/legal_docs/
-COPY data/ml_models/ ./data/ml_models/
+RUN python /app/backend/scripts/prepare_runtime_assets.py
 COPY --from=frontend-builder /app/frontend/dist /var/www/html
 
 # Configure Nginx to serve the frontend and proxy API requests to FastAPI
