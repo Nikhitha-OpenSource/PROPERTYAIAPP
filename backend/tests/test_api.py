@@ -42,15 +42,15 @@ async def test_register_allows_same_email_for_buyer_and_seller_but_not_admin():
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             buyer = await client.post(
                 "/api/v1/auth/register",
-                json={"name": "Same Email Buyer", "email": email, "password": "test123", "role": "BUYER"},
+                json={"name": "Same Email Buyer", "email": email, "password": "test123", "role": "BUYER", "code": "123456"},
             )
             seller = await client.post(
                 "/api/v1/auth/register",
-                json={"name": "Same Email Seller", "email": email, "password": "test123", "role": "SELLER"},
+                json={"name": "Same Email Seller", "email": email, "password": "test123", "role": "SELLER", "code": "123456"},
             )
             admin = await client.post(
                 "/api/v1/auth/register",
-                json={"name": "Blocked Admin", "email": admin_email, "password": "test123", "role": "ADMIN"},
+                json={"name": "Blocked Admin", "email": admin_email, "password": "test123", "role": "ADMIN", "code": "123456"},
             )
 
         assert buyer.status_code == 201
