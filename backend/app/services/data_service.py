@@ -622,4 +622,18 @@ def _build_fallback() -> List[Dict[str, Any]]:
             "latitude": lat,
             "longitude": lng,
             "status": "ACTIVE",
-            "verified": bo
+            "verified": bool(_stable_hash(prop_id) % 3 != 0),
+            "is_resale": False,
+            "furnishing": "SEMI_FURNISHED",
+            "amenities": ["Power Backup", "24x7 Security"],
+            "has_parking": True,
+            "has_gym": False,
+            "has_pool": False,
+            "floor": 2,
+            "total_floors": 5,
+            "age_years": 2,
+            "parking": "1 covered",
+            "image_urls": _pick_images(prop_id, "RESIDENTIAL"),
+            "created_at": "2025-01-15T00:00:00",
+        })
+    return props

@@ -307,22 +307,6 @@ async def get_chat_history(
         .all()
     )
 
-    return {
-        "channel_id": channel_id,
-        "messages": [
-            {
-                "id": r.msg_id,
-                "channel_id": r.channel_id,
-                "sender_id": r.sender_user_id,
-                "sender_role": r.sender_role,
-                "message": r.message,
-                "timestamp": r.timestamp.isoformat(),
-            }
-            for r in rows
-        ],
-        "requested_by": user.user_id,
-    }
-
     # Showcase: chat history for the injected sample properties
     if not rows and "property-" in channel_id:
         now = datetime.utcnow()
@@ -340,6 +324,22 @@ async def get_chat_history(
             ],
             "requested_by": user.user_id,
         }
+
+    return {
+        "channel_id": channel_id,
+        "messages": [
+            {
+                "id": r.msg_id,
+                "channel_id": r.channel_id,
+                "sender_id": r.sender_user_id,
+                "sender_role": r.sender_role,
+                "message": r.message,
+                "timestamp": r.timestamp.isoformat(),
+            }
+            for r in rows
+        ],
+        "requested_by": user.user_id,
+    }
 
 
 @router.post("/{channel_id}/alert")
