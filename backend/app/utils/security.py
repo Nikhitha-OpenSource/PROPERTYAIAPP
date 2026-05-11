@@ -65,8 +65,11 @@ async def get_current_user(
     db: Session = Depends(get_db),
 ):
     # Local fallback for the mock token set in api.ts
-    if token == "mock-jwt-token-propiq-2024":
-        return MockUser(user_id="mock-user-123")
+    if token.startswith("mock-jwt-token-propiq-2024"):
+        role = token.rsplit("-", 1)[-1].upper() if "-" in token else "BUYER"
+        if role not in {"BUYER", "SELLER", "ADMIN"}:
+            role = "BUYER"
+        return MockUser(user_id=f"mock-{role.lower()}-user", role=role)
 
     credentials_exc = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

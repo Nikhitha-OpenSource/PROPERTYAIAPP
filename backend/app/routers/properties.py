@@ -9,7 +9,12 @@ from sqlalchemy.orm import Session
 from app.db.models import Property
 from app.db.session import get_db
 from app.utils.security import MockUser, get_current_user, require_roles
-from app.services.data_service import list_properties as csv_list_properties, get_property as csv_get_property, get_geojson
+from app.services.data_service import (
+    list_properties as csv_list_properties,
+    get_property as csv_get_property,
+    get_geojson,
+    get_property_images,
+)
 
 router = APIRouter()
 
@@ -50,7 +55,7 @@ def _property_to_dict(p: Property) -> dict:
         "description": p.description,
         "price_per_sqft": (p.price / p.area_sqft) if p.area_sqft else None,
         "verified": p.verified,
-        "image_urls": [],
+        "image_urls": get_property_images(p.property_id, p.property_type),
         "created_at": p.created_at.isoformat(),
     }
 

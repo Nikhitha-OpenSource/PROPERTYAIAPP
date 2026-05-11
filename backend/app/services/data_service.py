@@ -5,14 +5,21 @@ All properties include real amenities, accurate per-locality GPS coords,
 and Unsplash-sourced images appropriate for the property type.
 """
 from __future__ import annotations
+from functools import lru_cache
 import json
-import os
 import random
 import hashlib
 import re
+from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 from app.demo_sellers import seller_for_property_position
+
+
+_BACKEND_DIR = Path(__file__).resolve().parents[2]
+_REPO_ROOT = _BACKEND_DIR.parent
+_BACKEND_DATA_DIR = _BACKEND_DIR / "data"
+_DATA_DIR = _REPO_ROOT / "data"
 
 # ---------------------------------------------------------------------------
 # Comprehensive Hyderabad locality → (lat, lng) lookup
@@ -178,11 +185,8 @@ AMENITY_LABELS = {
 _PROPERTIES: List[Dict[str, Any]] = []
 _LOADED = False
 
-CSV_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..", "..",
-                 "data", "datasets", "properties", "hyderabad_scraped.csv")
-)
-# Fallback absolute path
+CSV_PATH = str(_DATA_DIR / "datasets" / "properties" / "hyderabad_scraped.csv")
+# Fallback absolute path for older local Windows runs.
 CSV_FALLBACK = r"d:\CAPSTONE\data\datasets\properties\hyderabad_scraped.csv"
 
 
@@ -190,13 +194,46 @@ def _stable_hash(s: str) -> int:
     return int(hashlib.md5(s.encode()).hexdigest(), 16)
 
 
+@lru_cache(maxsize=1)
+def _local_image_pool() -> tuple[str, ...]:
+    """Return local image URLs served by FastAPI's /images static mount."""
+    image_roots = [
+        _DATA_DIR / "images" / "property_photos",
+        _BACKEND_DATA_DIR / "images" / "property_photos",
+    ]
+    for image_root in image_roots:
+        if not image_root.is_dir():
+            continue
+        files = sorted(
+            path for path in image_root.iterdir()
+            if path.is_file() and path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}
+        )
+        if files:
+            return tuple(f"/images/property_photos/{path.name}" for path in files)
+    return tuple()
+
+
 def _pick_images(prop_id: str, listing_type: str = "RESIDENTIAL", count: int = 4) -> List[str]:
     """Return a deterministic set of relevant image URLs for a property."""
+    local_pool = _local_image_pool()
+    if local_pool:
+        base = _stable_hash(f"{prop_id}:{listing_type}:local")
+        selected: list[str] = []
+        for i in range(min(count, len(local_pool))):
+            candidate = local_pool[(base + i) % len(local_pool)]
+            if candidate not in selected:
+                selected.append(candidate)
+        return selected
+
     pool = PROPERTY_IMAGES_BY_TYPE.get(listing_type, PROPERTY_IMAGES_BY_TYPE["RESIDENTIAL"])
     base = _stable_hash(f"{prop_id}:{listing_type}")
     selected = [(base + i) % len(pool) for i in range(count)]
     # Keep image set unique within a property
     return [pool[idx] for idx in dict.fromkeys(selected)]
+
+
+def get_property_images(prop_id: str, listing_type: str = "RESIDENTIAL", count: int = 4) -> List[str]:
+    return _pick_images(prop_id, listing_type, count)
 
 
 def _apply_demo_seller_ownership(properties: List[Dict[str, Any]]) -> None:
@@ -390,17 +427,117 @@ def _row_to_property(row: dict, idx: int) -> dict:
     }
 
 
+def _coerce_image_urls(value: Any) -> List[str]:
+    if isinstance(value, list):
+        return [str(url).strip() for url in value if str(url).strip()]
+    if isinstance(value, str) and value.strip():
+        raw = value.strip()
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                return [str(url).strip() for url in parsed if str(url).strip()]
+        except Exception:
+            pass
+        return [url.strip() for url in re.split(r"[|,]", raw) if url.strip()]
+    return []
+
+
+def _normalize_loaded_property(prop: dict, idx: int) -> dict:
+    """Fill required API fields for generated JSON/CSV records."""
+    item = dict(prop)
+    prop_id = str(item.get("property_id") or item.get("_id") or item.get("id") or f"hyd-{idx:05d}")
+    listing_type = str(item.get("listing_type") or item.get("property_type") or "RESIDENTIAL").upper()
+    if listing_type not in {"RESIDENTIAL", "COMMERCIAL", "LAND"}:
+        listing_type = "RESIDENTIAL"
+
+    locality = str(item.get("locality") or item.get("Location") or "Hyderabad").strip() or "Hyderabad"
+    city = str(item.get("city") or item.get("City") or "Hyderabad").strip() or "Hyderabad"
+
+    try:
+        area = int(float(item.get("area_sqft") or item.get("Area") or 1000))
+    except (TypeError, ValueError):
+        area = 1000
+    area = max(1, area)
+
+    try:
+        price = int(float(item.get("price") or item.get("Price") or area * 6500))
+    except (TypeError, ValueError):
+        price = area * 6500
+
+    try:
+        ppsf = int(float(item.get("price_per_sqft") or price / area))
+    except (TypeError, ValueError, ZeroDivisionError):
+        ppsf = int(price / area)
+
+    try:
+        bhk = int(float(item.get("bhk") if item.get("bhk") is not None else item.get("No. of Bedrooms", 2)))
+    except (TypeError, ValueError):
+        bhk = 2
+    if listing_type == "LAND":
+        bhk = 0
+
+    try:
+        lat = float(item.get("latitude"))
+        lng = float(item.get("longitude"))
+    except (TypeError, ValueError):
+        lat, lng = _get_coords(locality, prop_id)
+
+    image_urls = _coerce_image_urls(item.get("image_urls") or item.get("ImageURLs"))
+    if not image_urls:
+        image_urls = _pick_images(prop_id, listing_type)
+
+    title = str(item.get("title") or "").strip()
+    if not title:
+        title = f"{area:,} sqft Land Parcel in {locality}" if listing_type == "LAND" else f"{bhk} BHK Apartment in {locality}"
+
+    item.update({
+        "property_id": prop_id,
+        "title": title,
+        "description": str(item.get("description") or f"Verified PROPIQ listing in {locality}, {city}."),
+        "listing_type": listing_type,
+        "price": price,
+        "area_sqft": area,
+        "price_per_sqft": ppsf,
+        "bhk": bhk,
+        "bathrooms": int(item.get("bathrooms") or max(0 if listing_type == "LAND" else 1, bhk - 1)),
+        "locality": locality,
+        "city": city,
+        "state": str(item.get("state") or "Telangana"),
+        "latitude": lat,
+        "longitude": lng,
+        "status": str(item.get("status") or "ACTIVE"),
+        "verified": bool(item.get("verified", True)),
+        "furnishing": str(item.get("furnishing") or "SEMI_FURNISHED"),
+        "amenities": item.get("amenities") if isinstance(item.get("amenities"), list) else [],
+        "parking": str(item.get("parking") or "1 covered"),
+        "image_urls": image_urls,
+        "created_at": str(item.get("created_at") or "2025-01-15T00:00:00"),
+    })
+    return item
+
+
 def _load_data():
     global _PROPERTIES, _LOADED
     if _LOADED:
         return
 
     try:
-        # Try to load from the generated JSON file first
-        json_path = os.path.join(os.path.dirname(__file__), "..", "..", "data", "sample_properties.json")
-        if os.path.exists(json_path):
-            with open(json_path, 'r') as f:
-                _PROPERTIES = json.load(f)
+        # Try to load from the generated JSON file first.
+        json_candidates = [
+            _BACKEND_DATA_DIR / "sample_properties.json",
+            _DATA_DIR / "sample_properties.json",
+        ]
+        json_path = next((path for path in json_candidates if path.exists()), None)
+        if json_path:
+            with json_path.open("r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, dict):
+                loaded = loaded.get("items") or loaded.get("properties") or []
+            _PROPERTIES = [
+                _normalize_loaded_property(prop, idx + 1)
+                for idx, prop in enumerate(loaded)
+                if isinstance(prop, dict)
+            ]
             print(f"[DataService] Loaded JSON: {json_path} ({len(_PROPERTIES)} properties)")
         else:
             # Fallback to CSV loading
@@ -408,12 +545,15 @@ def _load_data():
 
             # Try multiple path candidates
             candidates = [
-                os.path.join(os.path.dirname(__file__), "..", "..", "data", "properties.csv"),
-                os.path.join(os.path.dirname(__file__), "..", "..", "data", "sample_properties.csv"),
+                _BACKEND_DATA_DIR / "properties.csv",
+                _BACKEND_DATA_DIR / "sample_properties.csv",
+                _DATA_DIR / "datasets" / "properties" / "hyderabad_scraped.csv",
+                _DATA_DIR / "datasets" / "properties" / "hyderabad_house_prices.csv",
+                Path(CSV_FALLBACK),
             ]
             df = None
             for p in candidates:
-                if os.path.exists(p):
+                if p.exists():
                     df = pd.read_csv(p)
                     print(f"[DataService] Loaded CSV: {p}")
                     break
@@ -422,7 +562,8 @@ def _load_data():
                 raise FileNotFoundError(f"CSV not found. Tried: {candidates}")
 
             # ── Filter to Hyderabad only ──────────────────────────────────────
-            df = df[df["City"].str.strip() == "Hyderabad"].copy()
+            if "City" in df.columns:
+                df = df[df["City"].astype(str).str.strip().str.lower() == "hyderabad"].copy()
             df = df.dropna(subset=["Price", "Area", "Location"])
             df = df[(df["Price"] > 0) & (df["Area"] > 0)]
             df = df.reset_index(drop=True)

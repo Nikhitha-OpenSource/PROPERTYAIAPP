@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 import importlib.util
 import logging
+from pathlib import Path
 from typing import Iterator
 from urllib.parse import parse_qs, unquote, urlparse
 
@@ -19,7 +20,12 @@ _using_fallback_sqlite = False
 
 
 def _fallback_sqlite_url() -> str:
-    return "sqlite:///./propiq.db"
+    db_path = Path(__file__).resolve().parents[2] / "propiq.db"
+    return f"sqlite:///{db_path.as_posix()}"
+
+
+def _sqlite_fallback_enabled() -> bool:
+    return bool(getattr(settings, "DATABASE_FALLBACK_SQLITE", True))
 
 
 def _normalize_database_url(url: str) -> str | URL:
@@ -42,8 +48,10 @@ def _normalize_database_url(url: str) -> str | URL:
 def _resolve_database_url() -> str | URL:
     url = settings.DATABASE_URL
     if url.startswith("mssql+pyodbc://") and importlib.util.find_spec("pyodbc") is None:
-        print("[WARN] pyodbc not installed; falling back to local SQLite database")
-        return _fallback_sqlite_url()
+        if _sqlite_fallback_enabled():
+            print("[WARN] pyodbc not installed; falling back to local SQLite database")
+            return _fallback_sqlite_url()
+        raise RuntimeError("pyodbc is required for the configured SQL Server database")
     normalized = _normalize_database_url(url)
     return normalized
 
@@ -88,24 +96,29 @@ def _ensure_connection() -> None:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
     except SQLAlchemyError as exc:
-        if settings.APP_ENV.strip().lower() in {"production", "prod", "azure"}:
+        if not _sqlite_fallback_enabled():
             raise
         _switch_to_fallback_sqlite(exc)
 
 
 def _seed_demo_users() -> None:
-    if settings.APP_ENV.strip().lower() in {"production", "prod", "azure"}:
+    if not settings.SEED_DEMO_USERS:
         return
 
     from app.utils.security import hash_password, verify_password
     from app.db.models import User
     from app.demo_sellers import DEMO_SELLERS
 
-    demo_email = "test@propiq.ai"
+    demo_emails = [
+        settings.DEMO_USER_EMAIL.lower().strip(),
+        *[email.lower().strip() for email in settings.DEMO_USER_EMAIL_ALIASES],
+    ]
+    demo_emails = list(dict.fromkeys(email for email in demo_emails if email))
+    demo_password = settings.DEMO_USER_PASSWORD
     demo_users: list[tuple[str, str, str, str, str | None]] = [
-        ("Demo Buyer", demo_email, "BUYER", "test123", None),
-        ("Demo Seller", demo_email, "SELLER", "test123", None),
-        ("Demo Admin", demo_email, "ADMIN", "test123", None),
+        (f"Demo {role.title()}", email, role, demo_password, None)
+        for email in demo_emails
+        for role in ("BUYER", "SELLER", "ADMIN")
     ]
     demo_users.extend(
         (seller["name"], seller["email"], "SELLER", seller["password"], seller["user_id"])
@@ -148,7 +161,7 @@ def init_db() -> None:
     try:
         Base.metadata.create_all(bind=engine)
     except SQLAlchemyError as exc:
-        if settings.APP_ENV.strip().lower() in {"production", "prod", "azure"}:
+        if not _sqlite_fallback_enabled():
             raise
         _switch_to_fallback_sqlite(exc)
         Base.metadata.create_all(bind=engine)

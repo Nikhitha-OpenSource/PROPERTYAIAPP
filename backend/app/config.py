@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     APP_ENV: str = Field(default="development", validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"))
     DEBUG: bool = True
     CORS_ORIGINS: Annotated[List[str], NoDecode] = ["http://localhost:5173", "http://localhost:3000"]
+    SEED_DEMO_USERS: bool = True
 
     # ── MongoDB ───────────────────────────────────────────────────────────────
     MONGODB_URI: str = "mongodb://localhost:27017"          # override with Atlas URI in .env
@@ -33,6 +34,7 @@ class Settings(BaseSettings):
     # - Local SQL Server (Docker): mssql+pyodbc://sa:<pwd>@localhost:1433/propiqdb?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
     # - Azure SQL: mssql+pyodbc://<user>:<pwd>@<server>.database.windows.net:1433/<db>?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no
     DATABASE_URL: str = f"sqlite:///{(_BACKEND_DIR / 'propiq.db').as_posix()}"
+    DATABASE_FALLBACK_SQLITE: bool = True
 
     # ── CosmosDB ──────────────────────────────────────────────────────────────
     AZURE_COSMOS_URL: str = ""
@@ -83,13 +85,16 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("JWT_EXPIRE_MINUTES", "ACCESS_TOKEN_EXPIRE_MINUTES"),
     )
     JWT_REFRESH_EXPIRE_DAYS: int = 7
+    DEMO_USER_EMAIL: str = "test@propiq.ai"
+    DEMO_USER_PASSWORD: str = "test123"
+    DEMO_USER_EMAIL_ALIASES: Annotated[List[str], NoDecode] = ["test@testprop.ai"]
 
     # ── External APIs ─────────────────────────────────────────────────────────
     GOOGLE_PLACES_API_KEY: str = ""
     POWERBI_EMBED_URL: str = ""
     TELANGANA_RERA_API_URL: str = ""
     TELANGANA_RERA_SEARCH_URL: str = "https://rerait.telangana.gov.in/SearchList/Search"
-    ELEVENLABS_API_KEY: str = "b3d5dd56944e8da6af3498708572f3965ac7c669161e69ded9c6d313b26aa1df"
+    ELEVENLABS_API_KEY: str = ""
     ELEVENLABS_VOICE_ID: str = "JBFqnCBsd6RMkjVDRZzb"
     ELEVENLABS_MODEL_ID: str = "eleven_multilingual_v2"
     ELEVENLABS_OUTPUT_FORMAT: str = "mp3_44100_128"
@@ -112,6 +117,18 @@ class Settings(BaseSettings):
             if value.startswith("["):
                 return value
             return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
+    @field_validator("DEMO_USER_EMAIL_ALIASES", mode="before")
+    @classmethod
+    def _parse_demo_email_aliases(cls, value):
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                return []
+            if value.startswith("["):
+                return value
+            return [item.strip().lower() for item in value.split(",") if item.strip()]
         return value
 
     @field_validator("DEBUG", mode="before")

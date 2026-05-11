@@ -3,6 +3,7 @@ PROPIQ AI - FastAPI Main Application Entry Point
 """
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -71,19 +72,20 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # -- Static Files: serve property images from data/images ---------------------
-# uvicorn runs from d:\CAPSTONE\backend, so ".." resolves to d:\CAPSTONE
-_images_dir = os.path.abspath(os.path.join("..", "data", "images"))
-if os.path.isdir(_images_dir):
-    app.mount("/images", StaticFiles(directory=_images_dir), name="images")
+_BACKEND_DIR = Path(__file__).resolve().parents[1]
+_REPO_ROOT = _BACKEND_DIR.parent
+_image_candidates = [
+    _REPO_ROOT / "data" / "images",
+    _BACKEND_DIR / "data" / "images",
+    Path(os.path.abspath(os.path.join("..", "data", "images"))),
+    Path(r"d:\CAPSTONE\data\images"),
+]
+_images_dir = next((path for path in _image_candidates if path.is_dir()), None)
+if _images_dir:
+    app.mount("/images", StaticFiles(directory=str(_images_dir)), name="images")
     print(f"[OK] Static images mounted from: {_images_dir}")
 else:
-    # Try absolute fallback
-    _images_dir_abs = r"d:\CAPSTONE\data\images"
-    if os.path.isdir(_images_dir_abs):
-        app.mount("/images", StaticFiles(directory=_images_dir_abs), name="images")
-        print(f"[OK] Static images mounted from: {_images_dir_abs}")
-    else:
-        print(f"[WARN] Images dir not found - image serving disabled")
+    print("[WARN] Images dir not found - image serving disabled")
 
 # -- Routers ------------------------------------------------------------------
 app.include_router(auth.router,       prefix="/api/v1/auth",       tags=["Auth"])

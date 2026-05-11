@@ -30,6 +30,7 @@ class TokenResponse(BaseModel):
     user_id: str
     role: str
     name: str
+    email: str
 
 
 class RefreshRequest(BaseModel):
@@ -67,6 +68,7 @@ async def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         "user_id": user.user_id,
         "role": user.role,
         "name": user.name,
+        "email": user.email,
     }
 
 
@@ -95,6 +97,7 @@ async def login(
         "user_id": user.user_id,
         "role": user.role,
         "name": user.name,
+        "email": user.email,
     }
 
 
@@ -108,4 +111,5 @@ async def refresh_token(payload: RefreshRequest):
         "user_id": user_id,
         "role": "BUYER",
         "name": "Demo User",
+        "email": "test@propiq.ai",
     }

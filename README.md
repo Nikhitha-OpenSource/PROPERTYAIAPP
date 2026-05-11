@@ -13,9 +13,9 @@ cd D:\CAPSTONE
 docker compose up --build
 ```
 
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- Swagger Docs: http://localhost:8000/docs
+- Unified app: http://localhost
+- Backend API: http://localhost/api/v1
+- Swagger Docs: http://localhost/docs
 
 ### Option 2: Local Development
 

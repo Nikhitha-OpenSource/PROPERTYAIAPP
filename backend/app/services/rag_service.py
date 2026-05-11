@@ -1,5 +1,6 @@
 """PROPIQ AI — RAG Service (FAISS + Azure OpenAI)"""
 import os
+from pathlib import Path
 from typing import Optional
 from app.config import settings
 
@@ -24,7 +25,7 @@ class RAGService:
             from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
             from langchain_community.vectorstores import FAISS
             from langchain.chains import RetrievalQA
-            from langchain_community.document_loaders import PyPDFDirectoryLoader
+            from langchain_community.document_loaders import PyPDFLoader, TextLoader
             from langchain.text_splitter import RecursiveCharacterTextSplitter
 
             docs_dir = settings.LEGAL_DOCS_DIR
@@ -42,8 +43,16 @@ class RAGService:
                 self._vector_store = FAISS.load_local(faiss_path, embeddings,
                                                       allow_dangerous_deserialization=True)
             elif os.path.exists(docs_dir):
-                loader = PyPDFDirectoryLoader(docs_dir)
-                docs = loader.load()
+                docs = []
+                for path in Path(docs_dir).rglob("*"):
+                    if not path.is_file():
+                        continue
+                    if path.suffix.lower() == ".pdf":
+                        docs.extend(PyPDFLoader(str(path)).load())
+                    elif path.suffix.lower() in {".txt", ".md"}:
+                        docs.extend(TextLoader(str(path), encoding="utf-8").load())
+                if not docs:
+                    return
                 splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
                 splits = splitter.split_documents(docs)
                 self._vector_store = FAISS.from_documents(splits, embeddings)

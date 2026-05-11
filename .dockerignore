@@ -1,4 +1,4 @@
-# 1. Node Modules (Massive)
+# 1. Node Modules
 frontend/node_modules/
 frontend/dist/
 
@@ -9,19 +9,33 @@ backend/.venv/
 __pycache__/
 *.pyc
 
-# 3. Git and IDEs (Massive history)
+# 3. Secrets and local environment files
+.env
+*.env
+backend/.env
+
+# 4. Git and IDEs
 .git/
 .github/
 .vscode/
 .idea/
 
-# 4. Huge Data (Prevents Docker from crashing)
-data/
+# 5. Large data that is not needed by the app image
+data/raw/
+data/processed/
+data/sample/
+data/datasets/demographics/
+data/datasets/market_trends/
+data/datasets/price_history/
+data/datasets/transactions/
+data/datasets/properties/multi_cities/
 
-# 5. Databases & Temp files
+# 6. Databases, local uploads, temp files
 *.db
 *.sqlite3
+backend/storage/
 .pytest_cache/
 pytest-cache-files-*
 tmp/
 temp/
+tmp-logs/
