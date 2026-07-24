@@ -6,7 +6,7 @@ This document explains the technology stack, the architecture, and how each comp
 
 ---
 
-## 1. 🛠️ Technology Stack (What we used & Why)
+## 1. 🛠️ Technology Stack (What was used & Why)
 
 ### **Frontend (User Interface)**
 - **React.js & TypeScript**: Core framework for building a robust, strictly-typed single-page application.
